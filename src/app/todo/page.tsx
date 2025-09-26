@@ -60,7 +60,7 @@ export default function TodoPage() {
     <div className="todo-container fade-in">
       {/* Todo Header */}
       <div className="todo-header">
-        <Heading level="h1" margin="0" className="todo-main-title">
+        <Heading level="h1" style={{ margin: 0 }} className="todo-main-title">
           Todo Dashboard
         </Heading>
         <Text size="large" color="secondary">
@@ -113,7 +113,7 @@ export default function TodoPage() {
           border: '1px solid var(--border)'
         }}>
           <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>📝</div>
-          <Heading level="h3" margin="0 0 small">All caught up!</Heading>
+          <Heading level="h3" style={{ margin: '0 0 small' }}>All caught up!</Heading>
           <Text color="secondary">No upcoming items for the next 7 days.</Text>
         </div>
       )}
@@ -129,17 +129,10 @@ export default function TodoPage() {
                   📝
                 </div>
                 <div>
-                  <Heading level="h3" margin="0" className="todo-section-title">
+                  <Heading level="h3" style={{ margin: 0 }} className="todo-section-title">
                     Assignments
                   </Heading>
-                  <Pill 
-                    margin="xxx-small 0 0"
-                    style={{ 
-                      background: 'var(--gradient-primary)', 
-                      color: 'white',
-                      border: 'none'
-                    }}
-                  >
+                  <Pill style={{ margin: 'xxx-small 0 0', background: 'var(--gradient-primary)', color: 'white', border: 'none' }}>
                     {assignments.length}
                   </Pill>
                 </div>
@@ -152,15 +145,15 @@ export default function TodoPage() {
                     className="todo-item-modern todo-kind-assignment fade-in"
                     style={{ animationDelay: `${index * 0.1}s` }}
                   >
-                    <Heading level="h5" margin="0 0 x-small" className="todo-item-title">
+                    <Heading level="h5" style={{ margin: '0 0 x-small' }} className="todo-item-title">
                       {(it.plannable as any)?.title || (it.plannable as any)?.name || 'Assignment'}
                     </Heading>
                     <div className="todo-item-meta">
-                      <Text size="small" margin="0 0 x-small">
+                      <Text size="small" style={{ margin: '0 0 x-small' }}>
                         🏫 {it.account.domain}
                       </Text>
                       {(it.plannable as any)?.todo_date && (
-                        <Text size="small" margin="0 0 x-small">
+                        <Text size="small" style={{ margin: '0 0 x-small' }}>
                           📅 Due: {formatDate((it.plannable as any)?.todo_date)}
                         </Text>
                       )}
@@ -187,17 +180,10 @@ export default function TodoPage() {
                   📚
                 </div>
                 <div>
-                  <Heading level="h3" margin="0" className="todo-section-title">
+                  <Heading level="h3" style={{ margin: 0 }} className="todo-section-title">
                     Other Items
                   </Heading>
-                  <Pill 
-                    margin="xxx-small 0 0"
-                    style={{ 
-                      background: 'var(--accent)', 
-                      color: 'white',
-                      border: 'none'
-                    }}
-                  >
+                  <Pill style={{ margin: 'xxx-small 0 0', background: 'var(--accent)', color: 'white', border: 'none' }}>
                     {otherItems.length}
                   </Pill>
                 </div>
@@ -210,15 +196,15 @@ export default function TodoPage() {
                     className="todo-item-modern fade-in"
                     style={{ animationDelay: `${(index + assignments.length) * 0.1}s` }}
                   >
-                    <Heading level="h5" margin="0 0 x-small" className="todo-item-title">
+                    <Heading level="h5" style={{ margin: '0 0 x-small' }} className="todo-item-title">
                       {(it.plannable as any)?.title || (it.plannable as any)?.name || it.plannable_type}
                     </Heading>
                     <div className="todo-item-meta">
-                      <Text size="small" margin="0 0 x-small">
+                      <Text size="small" style={{ margin: '0 0 x-small' }}>
                         🏫 {it.account.domain} • {it.plannable_type}
                       </Text>
                       {(it.plannable as any)?.todo_date && (
-                        <Text size="small" margin="0 0 x-small">
+                        <Text size="small" style={{ margin: '0 0 x-small' }}>
                           📅 {formatDate((it.plannable as any)?.todo_date)}
                         </Text>
                       )}
@@ -245,17 +231,10 @@ export default function TodoPage() {
                   ⚠️
                 </div>
                 <div>
-                  <Heading level="h3" margin="0" className="todo-section-title">
+                  <Heading level="h3" style={{ margin: 0 }} className="todo-section-title">
                     Missing Submissions
                   </Heading>
-                  <Pill 
-                    margin="xxx-small 0 0"
-                    style={{ 
-                      background: '#dc2626', 
-                      color: 'white',
-                      border: 'none'
-                    }}
-                  >
+                  <Pill style={{ margin: 'xxx-small 0 0', background: '#dc2626', color: 'white', border: 'none' }}>
                     {missingSubmissions.length}
                   </Pill>
                 </div>
@@ -268,11 +247,11 @@ export default function TodoPage() {
                     className="todo-item-modern todo-kind-missing fade-in"
                     style={{ animationDelay: `${(index + assignments.length + otherItems.length) * 0.1}s` }}
                   >
-                    <Heading level="h5" margin="0 0 x-small" className="todo-item-title">
+                    <Heading level="h5" style={{ margin: '0 0 x-small' }} className="todo-item-title">
                       {m.assignment ? m.assignment.name : m.title || 'Missing submission'}
                     </Heading>
                     <div className="todo-item-meta">
-                      <Text size="small" margin="0 0 x-small">
+                      <Text size="small" style={{ margin: '0 0 x-small' }}>
                         🏫 {m.account?.domain || 'unknown'}
                       </Text>
                     </div>

@@ -6,6 +6,7 @@ import { Heading } from "@instructure/ui-heading";
 import { Text } from "@instructure/ui-text";
 import { Link } from "@instructure/ui-link";
 import "../app/stylesheets/todo-sidebar.css";
+import { SubmissionStatus } from "./canvasApi";
 
 export interface PlannerLike {
   plannable_id?: any;
@@ -14,7 +15,7 @@ export interface PlannerLike {
   html_url?: string;
   account: any;
   context_name?: string;
-  submissions?: { submitted?: boolean };
+  submissions?: SubmissionStatus;
 }
 
 export interface MissingLike {
@@ -65,6 +66,11 @@ const relativeTime = (dateStr?: string) => {
     unit = "m";
   }
   return past ? value + unit + " ago" : "in " + value + unit;
+};
+
+// Type guard: SubmissionStatus can be false or an object; this checks for the object form
+const isSubmissionObject = (s: SubmissionStatus | undefined | null): s is Exclude<SubmissionStatus, false> => {
+  return typeof s === 'object' && s !== null;
 };
 
 type TabKey = "all" | "assignments" | "announcements" | "missing" | "completed";
@@ -205,8 +211,8 @@ export default function TodoSidebar({
       )
         return false; // guard: only true assignments
       
-      // Exclude completed assignments (those with submissions.submitted === true)
-      if (it.submissions?.submitted === true) 
+      // Exclude completed assignments (those with submissions that are not false and not missing)
+      if (isSubmissionObject(it.submissions) && !it.submissions.missing)
         return false;
       
       // Check if the assignment is within the current interval
@@ -261,10 +267,8 @@ export default function TodoSidebar({
         return false; // guard: only true assignments
       
       const hasSubmission = 
-        it.plannable?.submissions?.submitted === true ||
-        it.plannable?.submission?.submitted === true ||
-        (it as any).submissions?.submitted === true ||
-        (it as any).submission?.submitted === true ||
+        (isSubmissionObject(it.submissions) && !it.submissions.missing) ||
+        (isSubmissionObject(it.plannable?.submissions) && !it.plannable!.submissions!.missing) ||
         it.plannable?.has_submissions === true ||
         it.plannable?.submitted === true ||
         (it as any).submitted === true;
