@@ -221,7 +221,7 @@ export async function fetchDiscussionTopic(account: Account, courseId: number, t
 // ?start_date=#{beginning_of_week}&end_date=#{end_of_week}&per_page=100
 
 
-export async function fetchPlannerItems(account: Account, urlSearchParams: String) {
+export async function fetchPlannerItems(account: Account, urlSearchParams: string) {
   // /api/v1/planner/items
   const res = await canvasFetch(account, `planner/items${urlSearchParams}`);
   if (!res.ok) throw new Error(`Failed to fetch planner items for ${account.domain}`);

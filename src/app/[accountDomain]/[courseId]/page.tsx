@@ -31,7 +31,7 @@ export default function CoursePage() {
 
   useEffect(() => {
     if (!accountDomain || isNaN(courseId)) return;
-    let cancelled = false;
+    const cancelled = false;
 
     // load account from localStorage
     try {
