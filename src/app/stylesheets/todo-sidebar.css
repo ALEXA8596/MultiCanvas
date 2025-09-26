@@ -1,0 +1,458 @@
+.todo-sidebar {
+  position: sticky;
+  top: 1rem;
+  background: var(--secondary) !important;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 4px 16px var(--shadow-light);
+  overflow: visible;
+  transition: all var(--transition-normal);
+  max-height: calc(100vh - 2rem);
+  display: flex;
+  flex-direction: column;
+  width: 25rem !important;
+}
+
+.todo-sidebar:hover {
+  box-shadow: 0 8px 24px var(--shadow-medium);
+}
+
+.todo-progress-ring {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  /* background: var(--gradient-secondary); */
+  border: 1px solid var(--border);
+}
+
+/* Option group containers */
+.todo-option-group {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  padding: 0.25rem;
+  border-radius: var(--radius-md);
+  box-shadow: 0 2px 8px var(--shadow-light);
+  transition: all var(--transition-fast);
+}
+
+.todo-option-group:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px var(--shadow-medium);
+  border-color: var(--border-hover);
+}
+.todo-option-group .group-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--primary);
+  margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.todo-option-group .group-title::before {
+  content: '';
+  width: 3px;
+  height: 1rem;
+  background: var(--gradient-primary);
+  border-radius: 2px;
+}
+
+/* Collapsible header styles */
+.collapsible-header {
+  cursor: pointer;
+  justify-content: space-between;
+  transition: all var(--transition-fast);
+  padding: 0.25rem 0;
+  border-radius: var(--radius-sm);
+  width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.collapsible-header:hover {
+  background: var(--secondary);
+  color: var(--primary-hover);
+}
+
+.collapse-icon {
+  transition: transform var(--transition-fast);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  width: 1rem;
+  text-align: center;
+}
+
+.collapse-icon.collapsed {
+  transform: rotate(-90deg);
+}
+
+/* Interval controls */
+.todo-interval-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  background: var(--secondary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+}
+
+.interval-nav-btn {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--foreground);
+  transition: all var(--transition-fast);
+  font-weight: 600;
+}
+
+.interval-nav-btn:hover {
+  background: var(--gradient-primary);
+  color: white;
+  border-color: var(--primary);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px var(--shadow-light);
+}
+
+.interval-display {
+  flex: 1;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.interval-dates {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.interval-current-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  transition: all var(--transition-fast);
+}
+
+.interval-current-btn:hover {
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+}
+
+/* Collapsible content animations */
+.todo-search,
+.todo-domain-filters,
+.todo-tabs,
+.todo-interval-controls {
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.todo-progress-label {
+  margin-top: -0.25rem;
+  font-size: 1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--foreground);
+}
+
+.todo-progress-label .status-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--gradient-primary);
+  display: inline-block;
+  box-shadow: 0 2px 4px var(--shadow-light);
+}
+.todo-tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin: 0;
+  background: var(--secondary);
+  padding: 0.75rem 0.5rem;
+  border-radius: var(--radius-md);
+  overflow: visible;
+}
+
+.todo-tabs button {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 0.75rem 1rem;
+  font-size: 0.8rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  line-height: 1.2;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+  color: var(--text-muted);
+}
+
+.todo-tabs button.active {
+  background: var(--gradient-primary);
+  color: white;
+  box-shadow: 0 2px 8px var(--shadow-light);
+  position: relative;
+}
+
+.todo-tabs button:hover:not(.active) {
+  background: var(--surface-elevated);
+  color: var(--text-muted);
+  box-shadow: 0 2px 4px var(--shadow-light);
+}
+
+.todo-tabs button.active:hover {
+  background: var(--primary-hover);
+  box-shadow: 0 4px 12px var(--shadow-medium);
+}
+
+.todo-tabs button:focus-visible { 
+  outline: 2px solid var(--primary); 
+  outline-offset: 2px; 
+}
+.todo-section {
+  font-size: 0.875rem;
+  padding: 0.75rem;
+  max-height: 60vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.todo-section ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.todo-search { 
+  margin: 0; 
+}
+
+.todo-search input { 
+  width: 100%; 
+  padding: 0.75rem 1rem; 
+  border: 2px solid var(--border); 
+  border-radius: var(--radius-md); 
+  font-size: 0.875rem; 
+  background: var(--surface-elevated);
+  color: var(--foreground);
+  transition: all var(--transition-fast);
+}
+
+.todo-search input:focus { 
+  outline: 2px solid var(--primary); 
+  outline-offset: -2px;
+  box-shadow: 0 0 0 3px rgba(0, 132, 61, 0.1);
+  border-color: var(--primary);
+}
+
+.todo-search input::placeholder {
+  color: var(--text-muted);
+}
+
+.todo-domain-filters { 
+  display: flex; 
+  gap: 0.5rem; 
+  flex-wrap: wrap; 
+  margin: 0; 
+}
+
+.todo-domain-filters button { 
+  background: var(--secondary); 
+  border: 1px solid var(--border); 
+  padding: 0.5rem 1rem; 
+  border-radius: var(--radius-lg); 
+  font-size: 0.75rem; 
+  cursor: pointer; 
+  line-height: 1.2;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+  color: var(--foreground);
+}
+
+.todo-domain-filters button:hover {
+  background: var(--surface-elevated);
+  border-color: var(--border-hover);
+  color: var(--foreground);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px var(--shadow-light);
+}
+
+.todo-domain-filters button.active { 
+  background: var(--gradient-primary); 
+  border-color: var(--primary); 
+  color: white;
+  box-shadow: 0 2px 8px var(--shadow-light);
+}
+
+.todo-domain-filters button:focus-visible { 
+  outline: 2px solid var(--primary); 
+  outline-offset: 2px; 
+}
+.todo-items .todo-item { 
+  position: relative; 
+  margin-bottom: 1rem;
+}
+
+.todo-item { 
+  background: var(--surface-elevated); 
+  transition: all var(--transition-normal);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.todo-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--primary);
+  transform: scaleY(0);
+  transition: transform var(--transition-fast);
+}
+
+.todo-item:hover { 
+  background: var(--secondary);
+  box-shadow: 0 4px 12px var(--shadow-light);
+  transform: translateY(-2px);
+  border-color: var(--primary);
+}
+
+.todo-item:hover::before {
+  transform: scaleY(1);
+}
+
+.todo-item-title { 
+  margin: 0 0 0.5rem; 
+  font-weight: 600;
+  color: var(--foreground);
+  font-size: 0.9rem;
+}
+
+.todo-item-meta { 
+  margin: 0 0 0.75rem; 
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.todo-links { 
+  display: flex; 
+  gap: 1rem; 
+  flex-wrap: wrap; 
+}
+
+.todo-links a {
+  color: var(--primary);
+  text-decoration: none;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  transition: all var(--transition-fast);
+}
+
+.todo-links a:hover {
+  background: var(--primary);
+  color: white;
+  transform: translateY(-1px);
+}
+
+.todo-kind-assignment::before { 
+  background: var(--primary); 
+}
+
+.todo-kind-announcement::before { 
+  background: var(--accent); 
+}
+
+.todo-kind-completed::before { 
+  background: #22c55e; 
+}
+
+.todo-kind-completed {
+  opacity: 0.8;
+}
+
+.todo-kind-missing::before { 
+  background: #dc2626; 
+}
+
+.todo-kind-missing .todo-item-title { 
+  color: #dc2626; 
+}
+
+.todo-ring-bg { stroke:#d9efdc; }
+.todo-ring-progress { stroke: url(#todoGradient); animation: ring-in 0.6s ease; }
+.todo-progress-ring svg { overflow:visible; }
+.todo-ring-text { font-size:20px; font-weight:600; fill:#000; }
+.todo-ring-subtext { font-size:12px; fill:#222; }
+
+@keyframes ring-in { from { stroke-dashoffset: 0; } }
+
+/* Group headers */
+.todo-group-header { font-size:0.65rem; text-transform:uppercase; letter-spacing:.05em; font-weight:600; color:#444; margin:0 0 4px; padding:2px 4px; background:#f2f5f3; border-radius:4px; }
+.todo-group-header { display:flex; align-items:center; gap:4px; }
+.todo-group-header .todo-group-progress { display:inline-flex; }
+.todo-group-header .todo-group-count { margin-left:auto; font-weight:500; background:#e2e7e4; padding:2px 6px; border-radius:12px; font-size:0.55rem; }
+.todo-group + .todo-group { margin-top:.75rem; }
+
+/* Skeleton loaders (simple pulse) */
+.todo-skel { background:linear-gradient(90deg,#ececec,#f5f5f5,#ececec); background-size:200% 100%; animation: skel 1.2s linear infinite; border-radius:4px; height:.65rem; margin:.2rem 0; }
+@keyframes skel { 0% { background-position:0 0;} 100% { background-position:-200% 0;} }
+
+.todo-add-assignment {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #00843d;
+  cursor: pointer;
+}
+.todo-add-assignment:hover {
+  text-decoration: underline;
+}
+
+.todo-sidebar ul > li { background:#fff; }
+@media (max-width: 900px) {
+  .todo-sidebar {
+    width: 100%;
+    position: relative;
+    top: auto;
+    margin-top: 1rem;
+  }
+}

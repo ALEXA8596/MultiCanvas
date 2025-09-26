@@ -1,0 +1,506 @@
+/* Additional modern enhancements for Canvas MultiInstance */
+
+/* Enhanced form styling */
+.modern-form {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  box-shadow: 0 2px 8px var(--shadow-light);
+}
+
+.modern-form .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.modern-form label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: var(--foreground);
+}
+
+.modern-form input,
+.modern-form textarea,
+.modern-form select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-elevated);
+  color: var(--foreground);
+  transition: all var(--transition-fast);
+  font-size: 0.875rem;
+}
+
+.modern-form input:focus,
+.modern-form textarea:focus,
+.modern-form select:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(0, 132, 61, 0.1);
+}
+
+.modern-form input::placeholder,
+.modern-form textarea::placeholder {
+  color: var(--text-muted);
+}
+
+/* Enhanced table styling */
+.modern-table {
+  width: 100%;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 2px 8px var(--shadow-light);
+}
+
+.modern-table thead {
+  background: var(--gradient-secondary);
+}
+
+.modern-table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--foreground);
+  border-bottom: 1px solid var(--border);
+}
+
+.modern-table td {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--foreground);
+}
+
+.modern-table tbody tr:hover {
+  background: var(--secondary);
+}
+
+.modern-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Enhanced assignment card styling */
+.assignment-card {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+}
+
+.assignment-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--primary);
+  transform: scaleY(0);
+  transition: transform var(--transition-fast);
+}
+
+.assignment-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px var(--shadow-medium);
+  border-color: var(--primary);
+}
+
+.assignment-card:hover::before {
+  transform: scaleY(1);
+}
+
+.assignment-card.overdue::before {
+  background: #dc2626;
+  transform: scaleY(1);
+}
+
+.assignment-card.overdue {
+  border-color: #dc2626;
+}
+
+.assignment-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  margin-bottom: 1rem;
+}
+
+.assignment-card-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--foreground);
+  margin: 0;
+}
+
+.assignment-card-meta {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin: 0.5rem 0;
+}
+
+.assignment-card-due {
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  background: var(--secondary);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.assignment-card-due.overdue {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+
+/* Enhanced discussion styling */
+.discussion-card {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  transition: all var(--transition-normal);
+  border-left: 4px solid var(--accent);
+}
+
+.discussion-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px var(--shadow-medium);
+}
+
+.discussion-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.discussion-card-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--foreground);
+  margin: 0;
+}
+
+.discussion-card-replies {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  background: var(--secondary);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+/* Enhanced announcement styling */
+.announcement-card {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  transition: all var(--transition-normal);
+  border-left: 4px solid #f59e0b;
+}
+
+.announcement-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px var(--shadow-medium);
+}
+
+.announcement-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  margin-bottom: 1rem;
+}
+
+.announcement-card-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--foreground);
+  margin: 0;
+}
+
+.announcement-card-date {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  background: var(--secondary);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+/* Enhanced file browser styling */
+.file-browser {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 2px 8px var(--shadow-light);
+}
+
+.file-browser-header {
+  background: var(--gradient-secondary);
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.file-browser-item {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.file-browser-item:hover {
+  background: var(--secondary);
+}
+
+.file-browser-item:last-child {
+  border-bottom: none;
+}
+
+.file-browser-icon {
+  width: 2rem;
+  height: 2rem;
+  margin-right: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--secondary);
+  border-radius: var(--radius-sm);
+  font-size: 1.125rem;
+}
+
+.file-browser-name {
+  flex: 1;
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.file-browser-size {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  margin-left: 1rem;
+}
+
+/* Enhanced breadcrumb styling */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.breadcrumb-item {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 0.875rem;
+  transition: color var(--transition-fast);
+}
+
+.breadcrumb-item:hover {
+  color: var(--primary);
+}
+
+.breadcrumb-item.active {
+  color: var(--foreground);
+  font-weight: 500;
+}
+
+.breadcrumb-separator {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+/* Enhanced modal styling */
+.modern-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.modern-modal-content {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  max-width: 500px;
+  width: 90%;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 40px var(--shadow-strong);
+  animation: scaleIn 0.3s ease-out;
+}
+
+.modern-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.modern-modal-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--foreground);
+  margin: 0;
+}
+
+.modern-modal-close {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+}
+
+.modern-modal-close:hover {
+  background: var(--secondary);
+  color: var(--foreground);
+}
+
+/* Enhanced notification styling */
+.notification {
+  position: fixed;
+  top: 2rem;
+  right: 2rem;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.5rem;
+  max-width: 400px;
+  box-shadow: 0 8px 24px var(--shadow-medium);
+  z-index: 1000;
+  animation: slideInRight 0.3s ease-out;
+}
+
+.notification.success {
+  border-left: 4px solid #10b981;
+}
+
+.notification.warning {
+  border-left: 4px solid #f59e0b;
+}
+
+.notification.error {
+  border-left: 4px solid #dc2626;
+}
+
+.notification.info {
+  border-left: 4px solid #3b82f6;
+}
+
+/* Utility classes */
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  
+  .modern-card,
+  .todo-section-modern,
+  .dashboard-card-modern {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+  
+  .course-header-modern {
+    background: none !important;
+    color: black !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --border: #000000;
+    --border-hover: #000000;
+    --shadow-light: rgba(0, 0, 0, 0.5);
+    --shadow-medium: rgba(0, 0, 0, 0.7);
+    --shadow-strong: rgba(0, 0, 0, 0.9);
+  }
+  
+  .modern-card,
+  .todo-section-modern,
+  .dashboard-card-modern {
+    border: 2px solid;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  .modern-card:hover,
+  .todo-item-modern:hover,
+  .dashboard-card-modern:hover {
+    transform: none;
+  }
+}
