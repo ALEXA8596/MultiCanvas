@@ -9,7 +9,8 @@ import "../app/stylesheets/todo-sidebar.css";
 import { SubmissionStatus } from "./canvasApi";
 
 export interface PlannerLike {
-  course_id: number;
+  // Some planner items (e.g., user / global items) may have a null course_id
+  course_id: number | null;
   plannable_id?: any;
   plannable_type?: string;
   plannable?: any;
@@ -386,7 +387,9 @@ export default function TodoSidebar({
         domain: a.account.domain,
         className: a.context_name || "Unknown Class",
         canvasUrl: `https://${a.account.domain}/${a.html_url}`,
-        appUrl: `/${a.account.domain}/${a.course_id}/assignments/${a.plannable_id}`,
+  appUrl: `/${a.account.domain}/${a.course_id}/assignments/${a.plannable_id}`,
+  course_id: a.course_id,
+  plannable_id: a.plannable_id,
       })),
       ...completedList.map((a) => ({
         kind: "completed",
@@ -396,7 +399,9 @@ export default function TodoSidebar({
         domain: a.account.domain,
         className: a.context_name || "Unknown Class",
         canvasUrl: `https://${a.account.domain}/${a.html_url}`,
-        appUrl: `/${a.account.domain}/${a.course_id}/assignments/${a.plannable_id}`,
+  appUrl: `/${a.account.domain}/${a.course_id}/assignments/${a.plannable_id}`,
+  course_id: a.course_id,
+  plannable_id: a.plannable_id,
       })),
       ...announcementList.map((a) => ({
         kind: "announcement",
@@ -406,7 +411,9 @@ export default function TodoSidebar({
         domain: a.account.domain,
         className: a.context_name || "Unknown Class",
         canvasUrl: `https://${a.account.domain}/${a.html_url}`,
-        appUrl: `/${a.account.domain}/${a.course_id}/assignments/${a.plannable_id}`,
+  appUrl: `/${a.account.domain}/${a.course_id}/assignments/${a.plannable_id}`,
+  course_id: a.course_id,
+  plannable_id: a.plannable_id,
       })),
       ...missingList.map((m, idx) => ({
         kind: "missing",
@@ -416,7 +423,9 @@ export default function TodoSidebar({
         domain: m.account?.domain || "unknown",
         className: (m as any)?.context_name || "Unknown Class",
         canvasUrl: m.html_url ? m.html_url : undefined,
-        appUrl: `/${m.account.domain}/${m.course_id}/assignments/${m.plannable_id}`,
+  appUrl: `/${m.account.domain}/${m.course_id}/assignments/${m.plannable_id}`,
+  course_id: m.course_id,
+  plannable_id: m.plannable_id,
       })),
     ].sort(
       (a, b) =>

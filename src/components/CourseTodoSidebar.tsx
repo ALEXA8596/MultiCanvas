@@ -42,6 +42,7 @@ export default function CourseTodoSidebar({ account, course, courseId }: CourseT
 
         courseItems.forEach((item: any) => {
           const plannerItem: PlannerLike = {
+            course_id: item.course_id ?? courseId ?? null,
             plannable_id: item.plannable_id,
             plannable_type: item.plannable_type,
             plannable: item.plannable,
@@ -65,6 +66,8 @@ export default function CourseTodoSidebar({ account, course, courseId }: CourseT
         const courseMissing = missingItems.filter((item: any) => 
           item.course_id === courseId
         ).map((item: any) => ({
+          course_id: item.course_id ?? courseId,
+          plannable_id: item.plannable_id ?? item.assignment?.id ?? item.id,
           assignment: item.assignment,
           title: item.assignment?.name || item.title,
           html_url: item.html_url,
