@@ -416,11 +416,14 @@ export async function fetchCoursePage(account: Account, courseId: number, pageSl
 }
 
 // Shared helper for Canvas API fetches using Authorization header
-async function canvasFetch(account: Account, path: string) {
+async function canvasFetch(account: Account, path: string, init?: RequestInit) {
   const url = `/api/canvas?domain=${encodeURIComponent(account.domain)}&path=${encodeURIComponent(path)}`;
   return fetch(url, {
+    method: init?.method || 'GET',
+    body: init?.body,
     headers: {
-      Authorization: `Bearer ${account.apiKey}`
+      Authorization: `Bearer ${account.apiKey}`,
+      ...(init?.headers || {})
     }
   });
 }
@@ -446,3 +449,117 @@ export type Announcement = {
     url: string;
   }>; // Optional property for attachments
 };
+
+// ---- File Upload & Assignment Submission ----
+// Canvas multi-step upload then submit assignment with file_ids
+
+export type UploadedFile = {
+  id: number;
+  display_name?: string;
+  filename?: string;
+  size?: number;
+  content_type?: string;
+  url?: string;
+};
+
+type UploadInitResponse = {
+  upload_url: string;
+  upload_params: Record<string, string>;
+  file_param: string; // usually 'file'
+};
+
+/**
+ * Step 1 & 2: initiate upload & send binary. Returns Canvas file record (with id) on success.
+ */
+export async function uploadAssignmentFile(
+  account: Account,
+  courseId: number,
+  assignmentId: number,
+  file: File
+): Promise<UploadedFile> {
+  // Step 1: ask Canvas for an upload URL
+  const initRes = await canvasFetch(
+    account,
+    `courses/${courseId}/assignments/${assignmentId}/submissions/self/files`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: file.name,
+        size: file.size,
+        content_type: file.type || 'application/octet-stream'
+      })
+    }
+  );
+  if (!initRes.ok) {
+    throw new Error(`Failed to initiate file upload (${initRes.status})`);
+  }
+  const initJson: any = await initRes.json();
+  // Some Canvas instances wrap differently; attempt to normalize
+  const uploadInfo: UploadInitResponse = {
+    upload_url: initJson.upload_url || initJson.uploadUrl || initJson.url,
+    upload_params: initJson.upload_params || initJson.uploadParams || {},
+    file_param: initJson.file_param || 'file'
+  };
+  if (!uploadInfo.upload_url) {
+    throw new Error('Upload URL missing from Canvas response');
+  }
+
+  // Step 2: POST the file binary to the returned upload_url
+  const form = new FormData();
+  Object.entries(uploadInfo.upload_params).forEach(([k, v]) => form.append(k, v));
+  form.append(uploadInfo.file_param, file, file.name);
+
+  const uploadRes = await fetch(uploadInfo.upload_url, { method: 'POST', body: form });
+
+  // Canvas may 3xx redirect after successful upload; follow if needed
+  let finalRes = uploadRes;
+  if (uploadRes.status >= 300 && uploadRes.status < 400 && uploadRes.headers.get('location')) {
+    const loc = uploadRes.headers.get('location')!;
+    finalRes = await fetch(loc, { headers: { Authorization: `Bearer ${account.apiKey}` } });
+  }
+
+  let fileJson: any;
+  const text = await finalRes.text();
+  try { fileJson = JSON.parse(text); } catch { throw new Error('Invalid file upload response'); }
+
+  if (!finalRes.ok) {
+    throw new Error(`File upload failed (${finalRes.status})`);
+  }
+  return {
+    id: fileJson.id,
+    display_name: fileJson.display_name || fileJson.filename,
+    filename: fileJson.filename,
+    size: fileJson.size,
+    content_type: fileJson.content_type,
+    url: fileJson.url || fileJson.preview_url
+  };
+}
+
+/**
+ * Final submission for an assignment with uploaded file IDs.
+ */
+export async function submitAssignmentFiles(
+  account: Account,
+  courseId: number,
+  assignmentId: number,
+  fileIds: number[]
+): Promise<any> {
+  if (fileIds.length === 0) throw new Error('No files to submit');
+  const body = new URLSearchParams();
+  body.append('submission[submission_type]', 'online_upload');
+  fileIds.forEach((id) => body.append('submission[file_ids][]', String(id)));
+  const res = await canvasFetch(
+    account,
+    `courses/${courseId}/assignments/${assignmentId}/submissions`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body
+    }
+  );
+  if (!res.ok) {
+    throw new Error(`Failed to submit assignment (${res.status})`);
+  }
+  return res.json();
+}

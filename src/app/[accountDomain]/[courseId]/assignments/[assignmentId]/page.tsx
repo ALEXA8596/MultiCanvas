@@ -8,7 +8,7 @@ import { Link } from "@instructure/ui-link";
 import { Flex } from "@instructure/ui-flex";
 import CourseNav from "../../CourseNav";
 import CourseHeader from "../../CourseHeader";
-import { Account, Assignment, AssignmentOverride, fetchAssignment, fetchAssignmentOverrides } from "../../../../../components/canvasApi";
+import { Account, Assignment, AssignmentOverride, fetchAssignment, fetchAssignmentOverrides, uploadAssignmentFile, submitAssignmentFiles, UploadedFile } from "../../../../../components/canvasApi";
 
 export default function AssignmentDetailPage() {
   const params = useParams();
@@ -23,6 +23,9 @@ export default function AssignmentDetailPage() {
   const [overrides, setOverrides] = useState<AssignmentOverride[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  const [submitStatus, setSubmitStatus] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -107,6 +110,73 @@ export default function AssignmentDetailPage() {
               </View>
             )}
           </View>
+
+          {assignment.submission_types?.includes('online_upload') && account && (
+            <View margin="large 0 0">
+              <Heading level="h5" margin="0 0 small">Submit Files</Heading>
+              <Text size="small" color="secondary" as="p">Select one or more files then upload & submit.</Text>
+              <input
+                type="file"
+                multiple
+                onChange={async (e) => {
+                  if (!e.target.files || !account) return;                  
+                  setSubmitStatus(null);
+                  setUploading(true);
+                  try {
+                    const list = Array.from(e.target.files);
+                    const uploaded: UploadedFile[] = [];
+                    for (const f of list) {
+                      const uf = await uploadAssignmentFile(account, courseId, assignment.id, f);
+                      uploaded.push(uf);
+                    }
+                    setUploadedFiles(prev => [...prev, ...uploaded]);
+                  } catch (err: any) {
+                    setError(err.message || 'Upload failed');
+                  } finally {
+                    setUploading(false);
+                  }
+                }}
+                disabled={uploading}
+              />
+              {uploading && <Text size="small">Uploading...</Text>}
+              {uploadedFiles.length > 0 && (
+                <View margin="small 0 0">
+                  <Heading level="h6" margin="0 0 x-small">Ready to Submit</Heading>
+                  <View as="ul" margin="0 0 small" padding="0">
+                    {uploadedFiles.map(f => (
+                      <View as="li" key={f.id} margin="0 0 xx-small">
+                        <Text size="x-small">{f.display_name || f.filename} ({f.size ?? 0} bytes)</Text>
+                      </View>
+                    ))}
+                  </View>
+                  <button
+                    onClick={async () => {
+                      if (!account) return;
+                      setSubmitStatus(null);
+                      try {
+                        setSubmitStatus('Submitting...');
+                        const res = await submitAssignmentFiles(account, courseId, assignment.id, uploadedFiles.map(f => f.id));
+                        setSubmitStatus('Submitted successfully at ' + new Date().toLocaleTimeString());
+                      } catch (err: any) {
+                        setSubmitStatus('Submission failed: ' + (err.message || 'Unknown error'));
+                      }
+                    }}
+                    disabled={uploadedFiles.length === 0 || uploading}
+                    style={{
+                      padding: '0.5rem 1rem',
+                      borderRadius: '6px',
+                      border: '1px solid var(--border)',
+                      background: 'var(--gradient-primary)',
+                      color: 'white'
+                    }}
+                  >
+                    Submit Assignment
+                  </button>
+                  {submitStatus && <Text as="p" size="x-small" color={/failed/i.test(submitStatus) ? 'danger' : 'success'}>{submitStatus}</Text>}
+                </View>
+              )}
+            </View>
+          )}
         </View>
       )}
     </View>
