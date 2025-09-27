@@ -6,8 +6,8 @@ import { Heading } from "@instructure/ui-heading";
 import { Text } from "@instructure/ui-text";
 import { Flex } from "@instructure/ui-flex";
 import { Link } from "@instructure/ui-link";
-import { CanvasCourse, Account, fetchCourses, fetchPlannerItems, getMissingSubmissions } from "../../../components/canvasApi";
-import TodoSidebar, { PlannerLike, MissingLike } from "../../../components/TodoSidebar";
+import { CanvasCourse, Account, fetchCourses } from "../../../components/canvasApi";
+import CourseTodoSidebar from "../../../components/CourseTodoSidebar";
 import CourseNav from "./CourseNav";
 import CourseHeader from "./CourseHeader";
 
@@ -21,13 +21,6 @@ export default function CoursePage() {
   const [course, setCourse] = useState<CanvasCourse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
-  // Todo sidebar data
-  const [assignments, setAssignments] = useState<PlannerLike[]>([]);
-  const [announcements, setAnnouncements] = useState<PlannerLike[]>([]);
-  const [others, setOthers] = useState<PlannerLike[]>([]);
-  const [missing, setMissing] = useState<MissingLike[]>([]);
-  const [todoLoading, setTodoLoading] = useState(false);
 
   useEffect(() => {
     if (!accountDomain || isNaN(courseId)) return;
@@ -67,77 +60,7 @@ export default function CoursePage() {
     return () => { cancelled = true; };
   }, [account, courseId]);
 
-  // Fetch course-specific todo items
-  useEffect(() => {
-    if (!account || !course) return;
-    let cancelled = false;
-    setTodoLoading(true);
 
-    const fetchCourseTodos = async () => {
-      try {
-        // Fetch planner items for this specific course using context_codes parameter
-        const plannerParams = `?context_codes[]=course_${courseId}&per_page=100&order=desc`;
-        const plannerItems = await fetchPlannerItems(account, plannerParams);
-        
-        if (cancelled) return;
-
-        // Filter items by course context and categorize
-        const courseItems = plannerItems.filter((item: any) => 
-          item.context_name === course.name || 
-          item.html_url?.includes(`/courses/${courseId}/`)
-        );
-
-        const assignmentItems: PlannerLike[] = [];
-        const announcementItems: PlannerLike[] = [];
-        const otherItems: PlannerLike[] = [];
-
-        courseItems.forEach((item: any) => {
-          const plannerItem: PlannerLike = {
-            plannable_id: item.plannable_id,
-            plannable_type: item.plannable_type,
-            plannable: item.plannable,
-            html_url: item.html_url,
-            account: account,
-            context_name: item.context_name,
-            submissions: item.submissions
-          };
-
-          if (item.plannable_type === 'assignment') {
-            assignmentItems.push(plannerItem);
-          } else if (item.plannable_type === 'announcement' || item.plannable_type === 'discussion_topic') {
-            announcementItems.push(plannerItem);
-          } else {
-            otherItems.push(plannerItem);
-          }
-        });
-
-        // Fetch missing submissions for this course
-        const missingItems = await getMissingSubmissions(account);
-        const courseMissing = missingItems.filter((item: any) => 
-          item.course_id === courseId
-        ).map((item: any) => ({
-          assignment: item.assignment,
-          title: item.assignment?.name || item.title,
-          html_url: item.html_url,
-          account: account
-        }));
-
-        if (!cancelled) {
-          setAssignments(assignmentItems);
-          setAnnouncements(announcementItems);
-          setOthers(otherItems);
-          setMissing(courseMissing);
-        }
-      } catch (error) {
-        console.error('Failed to fetch course todos:', error);
-      } finally {
-        if (!cancelled) setTodoLoading(false);
-      }
-    };
-
-    fetchCourseTodos();
-    return () => { cancelled = true; };
-  }, [account, course, courseId]);
 
   if (!accountDomain || isNaN(courseId)) {
     return <Text>Invalid course URL.</Text>;
@@ -374,29 +297,12 @@ export default function CoursePage() {
         
         {/* Course-specific Todo Sidebar */}
         <div className="todo-sidebar-container">
-          {!todoLoading && course && (
-            <TodoSidebar 
-              assignments={assignments}
-              announcements={announcements}
-              others={others}
-              missing={missing}
+          {account && course && (
+            <CourseTodoSidebar 
+              account={account}
+              course={course}
+              courseId={courseId}
             />
-          )}
-          {todoLoading && (
-            <div style={{
-              background: 'var(--surface-elevated)',
-              border: '1px solid var(--border)',
-              borderRadius: 'var(--radius-lg)',
-              padding: '2rem',
-              boxShadow: '0 2px 8px var(--shadow-light)',
-              width: '22rem'
-            }}>
-              <div className="skeleton" style={{ height: '1.5rem', width: '60%', marginBottom: '1rem' }}></div>
-              <div className="skeleton" style={{ height: '8rem', width: '100%', marginBottom: '1rem' }}></div>
-              <div className="skeleton" style={{ height: '1rem', width: '80%', marginBottom: '0.5rem' }}></div>
-              <div className="skeleton" style={{ height: '1rem', width: '70%', marginBottom: '0.5rem' }}></div>
-              <div className="skeleton" style={{ height: '1rem', width: '60%' }}></div>
-            </div>
           )}
         </div>
       </div>

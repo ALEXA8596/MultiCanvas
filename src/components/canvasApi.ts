@@ -253,12 +253,16 @@ export type PlannerOverride = {
 
 export type SubmissionStatus =
   | {
+      submitted: boolean;
       excused: boolean;
       graded: boolean;
       late: boolean;
       missing: boolean;
       needs_grading: boolean;
       with_feedback: boolean;
+      has_feedback: boolean;
+      posted_at: string | null;
+      redo_request: boolean;
     }
   | false;
 
@@ -420,3 +424,25 @@ async function canvasFetch(account: Account, path: string) {
     }
   });
 }
+
+export async function fetchAnnouncements(account: Account, courseId: number): Promise<Announcement[]> {
+  const res = await canvasFetch(account, `courses/${courseId}/announcements`);
+  if (!res.ok) throw new Error(`Failed to fetch announcements for course ${courseId} on ${account.domain}`);
+  return res.json();
+}
+
+export type Announcement = {
+  id: string;
+  title: string;
+  message: string;
+  html_url: string;
+  created_at: string;
+  updated_at: string;
+  published: boolean;
+  attachments?: Array<{
+    id: string;
+    filename: string;
+    content_type: string;
+    url: string;
+  }>; // Optional property for attachments
+};

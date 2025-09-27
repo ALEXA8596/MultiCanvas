@@ -9,6 +9,7 @@ import "../app/stylesheets/todo-sidebar.css";
 import { SubmissionStatus } from "./canvasApi";
 
 export interface PlannerLike {
+  course_id: number;
   plannable_id?: any;
   plannable_type?: string;
   plannable?: any;
@@ -19,6 +20,8 @@ export interface PlannerLike {
 }
 
 export interface MissingLike {
+  plannable_id: any;
+  course_id: any;
   assignment?: { name?: string };
   title?: string;
   html_url?: string;
@@ -71,6 +74,17 @@ const relativeTime = (dateStr?: string) => {
 // Type guard: SubmissionStatus can be false or an object; this checks for the object form
 const isSubmissionObject = (s: SubmissionStatus | undefined | null): s is Exclude<SubmissionStatus, false> => {
   return typeof s === 'object' && s !== null;
+};
+
+// Helper function to check if an assignment is actually completed/submitted
+const isAssignmentCompleted = (item: any): boolean => {
+  return (
+    (isSubmissionObject(item.submissions) && item.submissions.submitted === true) ||
+    (isSubmissionObject(item.plannable?.submissions) && item.plannable!.submissions!.submitted === true) ||
+    item.plannable?.has_submissions === true ||
+    item.plannable?.submitted === true ||
+    item.submitted === true
+  );
 };
 
 type TabKey = "all" | "assignments" | "announcements" | "missing" | "completed";
@@ -211,8 +225,8 @@ export default function TodoSidebar({
       )
         return false; // guard: only true assignments
       
-      // Exclude completed assignments (those with submissions that are not false and not missing)
-      if (isSubmissionObject(it.submissions) && !it.submissions.missing)
+      // Exclude completed assignments (those that are actually submitted)
+      if (isAssignmentCompleted(it))
         return false;
       
       // Check if the assignment is within the current interval
@@ -266,14 +280,7 @@ export default function TodoSidebar({
       )
         return false; // guard: only true assignments
       
-      const hasSubmission = 
-        (isSubmissionObject(it.submissions) && !it.submissions.missing) ||
-        (isSubmissionObject(it.plannable?.submissions) && !it.plannable!.submissions!.missing) ||
-        it.plannable?.has_submissions === true ||
-        it.plannable?.submitted === true ||
-        (it as any).submitted === true;
-        
-      if (!hasSubmission) 
+      if (!isAssignmentCompleted(it)) 
         return false;
       
       // Check if the assignment is within the current interval
@@ -379,7 +386,7 @@ export default function TodoSidebar({
         domain: a.account.domain,
         className: a.context_name || "Unknown Class",
         canvasUrl: `https://${a.account.domain}/${a.html_url}`,
-        appUrl: a.html_url,
+        appUrl: `/${a.account.domain}/${a.course_id}/assignments/${a.plannable_id}`,
       })),
       ...completedList.map((a) => ({
         kind: "completed",
@@ -389,7 +396,7 @@ export default function TodoSidebar({
         domain: a.account.domain,
         className: a.context_name || "Unknown Class",
         canvasUrl: `https://${a.account.domain}/${a.html_url}`,
-        appUrl: a.html_url,
+        appUrl: `/${a.account.domain}/${a.course_id}/assignments/${a.plannable_id}`,
       })),
       ...announcementList.map((a) => ({
         kind: "announcement",
@@ -399,7 +406,7 @@ export default function TodoSidebar({
         domain: a.account.domain,
         className: a.context_name || "Unknown Class",
         canvasUrl: `https://${a.account.domain}/${a.html_url}`,
-        appUrl: a.html_url,
+        appUrl: `/${a.account.domain}/${a.course_id}/assignments/${a.plannable_id}`,
       })),
       ...missingList.map((m, idx) => ({
         kind: "missing",
@@ -409,7 +416,7 @@ export default function TodoSidebar({
         domain: m.account?.domain || "unknown",
         className: (m as any)?.context_name || "Unknown Class",
         canvasUrl: m.html_url ? m.html_url : undefined,
-        appUrl: m.html_url,
+        appUrl: `/${m.account.domain}/${m.course_id}/assignments/${m.plannable_id}`,
       })),
     ].sort(
       (a, b) =>
@@ -529,10 +536,12 @@ export default function TodoSidebar({
                   </Text>
                 )}
                 <Text as="p" size="x-small">
-                  <Link href={it.canvasUrl || it.appUrl}>Canvas</Link>
+                  <Link href={it.canvasUrl ? it.canvasUrl : ""}>Canvas</Link>
                 </Text>
                 <Text as="p" size="x-small">
-                  <Link href={it.appUrl}>App</Link>
+                  <Link href={`/${it.domain}/${it.course_id}/assignments/${it.plannable_id}`}>
+                    App
+                  </Link>
                 </Text>
               </View>
             ))}
@@ -577,7 +586,9 @@ export default function TodoSidebar({
             </Link>
           </Text>
           <Text as="p" size="x-small">
-            <Link href={it.html_url}>App</Link>
+            <Link href={`/${it.account.domain}/${it.course_id}/assignments/${it.plannable_id}`}>
+              App
+            </Link>
           </Text>
         </View>
       ))}
@@ -619,7 +630,9 @@ export default function TodoSidebar({
             </Link>
           </Text>
           <Text as="p" size="x-small">
-            <Link href={it.html_url}>App</Link>
+            <Link href={`/${it.account.domain}/${it.course_id}/announcements/${it.plannable_id}`}>
+              App
+            </Link>
           </Text>
         </View>
       ))}
@@ -653,7 +666,7 @@ export default function TodoSidebar({
           </Text>
           {m.html_url && (
             <Text as="p" size="x-small">
-              <Link href={m.html_url}>Open</Link>
+              <Link href={"https://" + m.account.domain + "/" + m.html_url}>Open</Link>
             </Text>
           )}
         </View>
@@ -699,7 +712,9 @@ export default function TodoSidebar({
             </Link>
           </Text>
           <Text as="p" size="x-small">
-            <Link href={it.html_url}>App</Link>
+            <Link href={`/${it.account.domain}/${it.course_id}/assignments/${it.plannable_id}`}>
+              App
+            </Link>
           </Text>
         </View>
       ))}

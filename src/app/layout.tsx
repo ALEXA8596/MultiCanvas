@@ -26,6 +26,8 @@ import {
   faListCheck,
   faInbox,
 } from "@fortawesome/free-solid-svg-icons";
+import { ThemeProvider } from "../components/ThemeProvider";
+import { ThemeToggle } from "../components/ThemeToggle";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({
@@ -56,6 +58,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
+        <ThemeProvider>
           {/* <View as="div" background="secondary" className="fade-in" style={{ 
             borderBottom: '1px solid var(--border)',
             background: 'var(--gradient-secondary)',
@@ -72,10 +75,14 @@ export default function RootLayout({
             gap="large"
             wrap="no-wrap"
             padding="medium large"
+            justifyItems="space-between"
           >
             <Heading level="h3" margin="0 small 0 0" className="text-gradient">
               Canvas MultiInstance
             </Heading>
+            <div style={{ marginLeft: 'auto' }}>
+              <ThemeToggle />
+            </div>
           </Flex>
           <Flex
             as="div"
@@ -155,14 +162,14 @@ export default function RootLayout({
                             icon={item.icon}
                             style={{
                               fontSize: "1.5rem",
-                              color: active ? "white" : "var(--primary)",
+                              color: active ? "var(--foreground)" : "var(--primary)",
                             }}
                           />
                           <Text
                             size="x-small"
                             weight={active ? "bold" : "normal"}
                             style={{
-                              color: active ? "white" : "var(--foreground)",
+                              color: active ? "var(--foreground)" : "var(--foreground)",
                               textAlign: "center",
                               lineHeight: "1.2",
                             }}
@@ -191,6 +198,7 @@ export default function RootLayout({
               <div style={{ padding: "2rem" }}>{children}</div>
             </View>
           </Flex>
+        </ThemeProvider>
       </body>
     </html>
   );

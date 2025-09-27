@@ -1,5 +1,4 @@
 .todo-sidebar {
-  position: sticky;
   top: 1rem;
   background: var(--secondary) !important;
   border: 1px solid var(--border);
@@ -9,6 +8,7 @@
   transition: all var(--transition-normal);
   /* max-height: calc(100vh - 2rem); */
   height: auto !important;
+  max-height: none !important;
   display: flex;
   flex-direction: column;
   width: 25rem !important;

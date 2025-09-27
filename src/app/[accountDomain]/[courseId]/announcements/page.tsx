@@ -89,7 +89,7 @@ export default function AnnouncementsPage() {
             {a.html_url && account && (
               <View margin="small 0 0">
                 <Text as="p" size="small">
-                  <Link href={`https://${account.domain}${a.html_url}`}>Open in Canvas</Link>
+                  <Link href={`${a.html_url}`}>Open in Canvas</Link>
                 </Text>
               </View>
             )}
