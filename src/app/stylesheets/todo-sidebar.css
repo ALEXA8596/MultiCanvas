@@ -7,7 +7,8 @@
   box-shadow: 0 4px 16px var(--shadow-light);
   overflow: visible;
   transition: all var(--transition-normal);
-  max-height: calc(100vh - 2rem);
+  /* max-height: calc(100vh - 2rem); */
+  height: auto !important;
   display: flex;
   flex-direction: column;
   width: 25rem !important;
@@ -240,12 +241,14 @@
   outline: 2px solid var(--primary); 
   outline-offset: 2px; 
 }
+
 .todo-section {
   font-size: 0.875rem;
   padding: 0.75rem;
-  max-height: 60vh;
-  overflow-y: auto;
-  overflow-x: hidden;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .todo-section ul {

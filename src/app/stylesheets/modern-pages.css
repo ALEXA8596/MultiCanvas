@@ -208,7 +208,7 @@
 
 .dashboard-card-modern {
   background: var(--surface-elevated);
-  border: 2px solid var(--border) !important;
+  border: 4px solid var(--border) !important;
   border-radius: var(--radius-lg);
   overflow: hidden;
   transition: all var(--transition-normal);
@@ -226,38 +226,39 @@
 
 .dashboard-card-modern-inner {
   height: 100%;
-  border-radius: var(--radius-lg);
+  /* border-radius: var(--radius-lg); */
+  border: none;
   transition: all var(--transition-normal);
 }
 
 .dashboard-card-modern-inner:hover .ic-DashboardCard__box {
   transform: translateY(-2px);
   box-shadow: 0 8px 24px var(--shadow-medium) !important;
-  border-color: var(--primary) !important;
+  /* border-color: var(--primary) !important; */
 }
 
 .dashboard-card-modern .ic-DashboardCard__box {
   background: var(--surface-elevated) !important;
-  border: 2px solid var(--border) !important;
+  border: none !important;
   border-radius: var(--radius-lg) !important;
   box-shadow: 0 4px 12px var(--shadow-medium) !important;
   transition: all var(--transition-normal) !important;
 }
 
 /* Additional fallback for borders */
-.dashboard-card-modern,
-.dashboard-card-modern .ic-DashboardCard,
-.dashboard-card-modern .ic-DashboardCard__box__container,
-.dashboard-card-modern .ic-DashboardCard__box {
+/* .dashboard-card-modern, */
+/* .dashboard-card-modern .ic-DashboardCard, */
+/* .dashboard-card-modern .ic-DashboardCard__box__container, */
+/* .dashboard-card-modern .ic-DashboardCard__box {
   border: 2px solid var(--border) !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-}
+} */
 
 .dashboard-card-header,
 .ic-DashboardCard__header {
   padding: 1.5rem;
   background: var(--gradient-secondary);
-  border-bottom: 1px solid var(--border);
+  border: none !important;
   position: relative;
   flex: 1;
 }
