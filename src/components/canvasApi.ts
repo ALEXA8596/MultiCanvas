@@ -563,3 +563,145 @@ export async function submitAssignmentFiles(
   }
   return res.json();
 }
+
+// ---- Conversations (Inbox) ----
+// Reference: https://canvas.instructure.com/doc/api/conversations.html
+
+export type ConversationParticipant = {
+  id: number;
+  name?: string;
+  short_name?: string;
+  avatar_url?: string;
+};
+
+export type Conversation = {
+  id: number;
+  subject?: string | null;
+  workflow_state?: 'unread' | 'read' | 'archived';
+  last_message?: string | null;
+  last_message_at?: string | null;
+  message_count?: number;
+  participants?: ConversationParticipant[];
+  properties?: string[]; // e.g. ["starred"]
+  context_name?: string;
+  account?: Account; // attached client-side for multi-account aggregation
+};
+
+export interface FetchConversationsOptions {
+  scope?: 'unread' | 'starred' | 'archived' | 'sent';
+  per_page?: number;
+  includeMessages?: boolean; // if true adds include[]=messages
+}
+
+export async function fetchConversations(
+  account: Account,
+  opts: FetchConversationsOptions = {}
+): Promise<Conversation[]> {
+  const params = new URLSearchParams();
+  if (opts.scope) params.append('scope', opts.scope);
+  params.append('per_page', String(opts.per_page ?? 20));
+  if (opts.includeMessages) params.append('include[]', 'messages');
+  const path = `conversations?${params.toString()}`;
+  const res = await canvasFetch(account, path);
+  if (!res.ok) throw new Error(`Failed to fetch conversations (${account.domain})`);
+  const json = await res.json();
+  if (!Array.isArray(json)) return [];
+  return json.map((c: any) => ({ ...c, account }));
+}
+
+export async function updateConversationState(
+  account: Account,
+  conversationId: number,
+  workflow_state: 'read' | 'unread' | 'archived'
+): Promise<Conversation> {
+  const form = new URLSearchParams();
+  form.append('conversation[workflow_state]', workflow_state);
+  const res = await canvasFetch(
+    account,
+    `conversations/${conversationId}`,
+    {
+      method: 'POST', // proxy POST with override
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: form
+    }
+  );
+  if (!res.ok) throw new Error(`Failed to update conversation ${conversationId}`);
+  return res.json();
+}
+
+export async function markAllConversationsRead(account: Account): Promise<void> {
+  const res = await canvasFetch(
+    account,
+    `conversations/mark_all_as_read`,
+    { method: 'POST' }
+  );
+  if (!res.ok) throw new Error('Failed to mark all as read');
+}
+
+// ---- Files ----
+// Reference: https://developerdocs.instructure.com/services/canvas/resources/files#method.files.api_index
+export interface CanvasFile {
+  id: number;
+  uuid?: string;
+  display_name?: string;
+  filename?: string;
+  size?: number;
+  content_type?: string;
+  url?: string; // download url
+  html_url?: string; // canvas page url
+  created_at?: string;
+  updated_at?: string;
+  unlock_at?: string | null;
+  locked?: boolean;
+  hidden?: boolean;
+  lock_at?: string | null;
+  hidden_for_user?: boolean;
+  thumbnail_url?: string | null;
+  modified_at?: string;
+  mime_class?: string;
+  media_entry_id?: string | null;
+  folder_id?: number;
+  display?: string | null;
+  preview_url?: string | null;
+  account?: Account; // client-side convenience
+}
+
+/** Fetch all course files (basic pagination support via Link header) */
+export async function fetchCourseFiles(account: Account, courseId: number, perPage = 100, maxPages = 5): Promise<CanvasFile[]> {
+  let pageUrl: string | null = `courses/${courseId}/files?per_page=${perPage}&sort=updated_at&order=desc`;
+  const all: CanvasFile[] = [];
+  let pages = 0;
+  while (pageUrl && pages < maxPages) {
+    pages++;
+    const res = await canvasFetch(account, pageUrl);
+    if (!res.ok) throw new Error(`Failed to fetch files for course ${courseId}`);
+    const batch = await res.json();
+    if (Array.isArray(batch)) all.push(...batch.map(f => ({ ...f, account })));
+    // Parse Link header for rel="next"
+    const link = res.headers.get('Link') || res.headers.get('link');
+    if (link) {
+      const m = link.split(',').map(s => s.trim()).find(s => /rel="next"/.test(s));
+      if (m) {
+        const urlMatch = m.match(/<([^>]+)>/);
+        if (urlMatch) {
+          const absolute = urlMatch[1];
+          const pathIdx = absolute.indexOf('/api/v1/');
+            if (pathIdx >= 0) {
+              pageUrl = absolute.substring(pathIdx + '/api/v1/'.length);
+            } else {
+              pageUrl = null;
+            }
+        } else pageUrl = null;
+      } else pageUrl = null;
+    } else pageUrl = null;
+  }
+  return all;
+}
+
+/** Fetch a single file (courseId not required by endpoint, but kept for consistency) */
+export async function fetchCourseFile(account: Account, fileId: number): Promise<CanvasFile> {
+  const res = await canvasFetch(account, `files/${fileId}`);
+  if (!res.ok) throw new Error(`Failed to fetch file ${fileId}`);
+  const f = await res.json();
+  return { ...f, account };
+}

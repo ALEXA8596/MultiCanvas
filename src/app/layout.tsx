@@ -1,4 +1,3 @@
-// NOTE: Requires: npm i @instructure/ui @instructure/emotion @instructure/ui-themes
 "use client";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
@@ -6,17 +5,18 @@ import "./stylesheets/modern-pages.css";
 import "./stylesheets/components.css";
 import "./globals.css";
 
-import { InstUISettingsProvider } from "@instructure/emotion";
-// Canvas theme might be default export or named differently; fallback to default import
-import * as InstructureThemes from "@instructure/ui-themes";
-// Use provided canvas theme token; fallback to whole module object
-const canvasTheme = (InstructureThemes as any).canvas || InstructureThemes;
 import { View } from "@instructure/ui-view";
 import { Flex } from "@instructure/ui-flex";
 import { Heading } from "@instructure/ui-heading";
 import { Text } from "@instructure/ui-text";
 import { Link } from "@instructure/ui-link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import {
+  fetchAllCourses,
+  CanvasCourse,
+  Account,
+} from "../components/canvasApi";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faUser,
@@ -55,6 +55,48 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const [coursesOpen, setCoursesOpen] = useState(false);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [courses, setCourses] = useState<
+    Array<{ account: Account; course: CanvasCourse }>
+  >([]);
+
+  useEffect(() => {
+    // load saved accounts and fetch courses
+    const saved =
+      typeof window !== "undefined" ? localStorage.getItem("accounts") : null;
+    let parsed: Account[] = [];
+    if (saved) {
+      try {
+        parsed = JSON.parse(saved);
+      } catch {
+        parsed = [];
+      }
+    }
+    setAccounts(parsed || []);
+    if ((parsed || []).length === 0) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetchAllCourses(parsed);
+        if (cancelled) return;
+        const flat: Array<{ account: Account; course: CanvasCourse }> = [];
+        for (const r of res) {
+          const acct = r.account as Account;
+          if (Array.isArray(r.courses)) {
+            for (const c of r.courses as CanvasCourse[])
+              flat.push({ account: acct, course: c });
+          }
+        }
+        setCourses(flat);
+      } catch (e) {
+        // ignore failures here; dropdown will be empty
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
@@ -76,11 +118,12 @@ export default function RootLayout({
             wrap="no-wrap"
             padding="medium large"
             justifyItems="space-between"
+            className="title-bar"
           >
             <Heading level="h3" margin="0 small 0 0" className="text-gradient">
               Canvas MultiInstance
             </Heading>
-            <div style={{ marginLeft: 'auto' }}>
+            <div style={{ marginLeft: "auto" }}>
               <ThemeToggle />
             </div>
           </Flex>
@@ -125,59 +168,236 @@ export default function RootLayout({
                         width: "100%",
                       }}
                     >
-                      <Link
-                        href={item.href}
-                        isWithinText={false}
-                        interaction="enabled"
-                        className={`nav-item-modern ${active ? "active" : ""}`}
-                        style={{
-                          textDecoration: "none",
-                          display: "flex",
-                          flexDirection: "column",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          padding: "0.75rem 0.5rem",
-                          margin: "0.125rem",
-                          borderRadius: "var(--radius-md)",
-                          transition: "all var(--transition-fast)",
-                          background: active
-                            ? "var(--gradient-primary)"
-                            : "transparent",
-                          color: active ? "white" : "var(--foreground)",
-                          position: "relative",
-                          minHeight: "4rem",
-                          width: "100%",
-                        }}
-                      >
+                      {item.label === "Courses" ? (
                         <div
+                          // className={`nav-item-modern ${active ? "active" : ""}`}
+                          style={{}}
+                        >
+                          <div
+                            style={{
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            <FontAwesomeIcon
+                              icon={item.icon}
+                              style={{
+                                fontSize: "1.5rem",
+                                color: active
+                                  ? "var(--foreground)"
+                                  : "var(--primary)",
+                              }}
+                            />
+                            <div
+                              style={{ position: "relative", width: "100%" }}
+                            >
+                              <button
+                                onClick={() => setCoursesOpen((o) => !o)}
+                                style={{
+                                  background: "transparent",
+                                  border: "none",
+                                  padding: 0,
+                                  cursor: "pointer",
+                                  // color: active ? 'var(--foreground)' : 'var(--foreground)'
+                                }}
+                              >
+                                <Text
+                                  size="x-small"
+                                  weight={active ? "bold" : "normal"}
+                                  style={{
+                                    color: active
+                                      ? "var(--foreground)"
+                                      : "var(--foreground)",
+                                    textAlign: "center",
+                                    lineHeight: "1.2",
+                                  }}
+                                >
+                                  {item.label}
+                                </Text>
+                              </button>
+
+                              {coursesOpen && (
+                                <div
+                                  id="nav-tray-portal"
+                                  style={{
+                                    position: "fixed",
+                                    left: "6rem",
+                                    top: "5vw",
+                                    minWidth: "320px",
+                                    maxWidth: "calc(100% - 6rem)",
+                                    zIndex: 9999,
+                                    color: "white",
+                                    padding: "0.5rem",
+                                    background: "var(--surface-elevated)",
+                                    border: "1px solid var(--border)",
+                                    borderRadius: 8,
+                                    boxShadow: "0 6px 28px rgba(0,0,0,0.18)",
+                                  }}
+                                >
+                                  <span dir="ltr">
+                                    <span
+                                      dir="ltr"
+                                      className="css-1gto5tw-tray transition--slide-left-entered"
+                                    >
+                                      <div
+                                        role="dialog"
+                                        aria-label="Courses tray"
+                                      >
+                                        <div
+                                          className="css-1kdtqv3-tray__content"
+                                          style={{ padding: "0.5rem" }}
+                                        >
+                                          <div
+                                            className="navigation-tray-container courses-tray"
+                                            style={{
+                                              display: "flex",
+                                              gap: "0.5rem",
+                                              flexDirection: "column",
+                                            }}
+                                          >
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+                                              <h2 dir="ltr" className="css-1hr8vi3-view-heading" style={{ margin: 0 }}>Courses</h2>
+                                              <span className="css-zvg8k4-closeButton">
+                                                <button aria-label="Close" type="button" onClick={() => setCoursesOpen(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
+                                                  <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                                                    <svg viewBox="0 0 1920 1920" width="1em" height="1em" aria-hidden="true" role="presentation" focusable="false" style={{ width: '1em', height: '1em' }}>
+                                                      <g role="presentation"><path d="M797.32 985.882 344.772 1438.43l188.561 188.562 452.549-452.549 452.548 452.549 188.562-188.562-452.549-452.548 452.549-452.549-188.562-188.561L985.882 797.32 533.333 344.772 344.772 533.333z"></path></g>
+                                                    </svg>
+                                                    <span style={{ position: 'absolute', left: '-9999px' }}>Close</span>
+                                                  </span>
+                                                </button>
+                                              </span>
+                                            </div>
+
+                                            <div>
+                                              <div dir="ltr">
+                                                <hr role="presentation" />
+                                                <span dir="ltr">
+                                                  <hr role="presentation" />
+                                                  <ul dir="ltr" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                                                    {courses.length === 0 && (
+                                                      <li
+                                                        style={{
+                                                          padding: "0.5rem",
+                                                        }}
+                                                      >
+                                                        <Text
+                                                          size="x-small"
+                                                          color="secondary"
+                                                        >
+                                                          No courses
+                                                        </Text>
+                                                      </li>
+                                                    )}
+                                                    {courses.map(
+                                                      ({ account, course }) => (
+                                                        <li
+                                                          key={`${account.domain}-${course.id}`}
+                                                          style={{
+                                                            padding:
+                                                              "0.25rem 0",
+                                                            borderBottom:
+                                                              "1px solid rgba(0,0,0,0.04)",
+                                                          }}
+                                                        >
+                                                          <Link
+                                                            href={`/${account.domain}/${course.id}`}
+                                                            isWithinText={false}
+                                                            interaction="enabled"
+                                                            style={{ textDecoration: 'underline', color: 'var(--primary)', display: 'inline-block' }}
+                                                          >
+                                                            <div style={{ fontWeight: 600 }}>{course.name}</div>
+                                                          </Link>
+                                                          <div
+                                                            style={{
+                                                              color:
+                                                                "var(--muted)",
+                                                              fontSize:
+                                                                "0.8rem",
+                                                            }}
+                                                          >
+                                                            {course.course_code ||
+                                                              course.friendly_name ||
+                                                              ""}
+                                                          </div>
+                                                        </li>
+                                                      )
+                                                    )}
+                                                  </ul>
+                                                </span>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </span>
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <Link
+                          href={item.href}
+                          isWithinText={false}
+                          interaction="enabled"
+                          // className={`nav-item-modern ${active ? "active" : ""}`}
                           style={{
+                            textDecoration: "none",
                             display: "flex",
                             flexDirection: "column",
                             alignItems: "center",
                             justifyContent: "center",
-                            gap: "0.25rem",
+                            padding: "0.75rem 0.5rem",
+                            margin: "0.125rem",
+                            borderRadius: "var(--radius-md)",
+                            transition: "all var(--transition-fast)",
+                            background: active
+                              ? "var(--gradient-primary)"
+                              : "transparent",
+                            color: active ? "white" : "var(--foreground)",
+                            position: "relative",
+                            minHeight: "4rem",
+                            width: "100%",
                           }}
                         >
-                          <FontAwesomeIcon
-                            icon={item.icon}
+                          <div
                             style={{
-                              fontSize: "1.5rem",
-                              color: active ? "var(--foreground)" : "var(--primary)",
-                            }}
-                          />
-                          <Text
-                            size="x-small"
-                            weight={active ? "bold" : "normal"}
-                            style={{
-                              color: active ? "var(--foreground)" : "var(--foreground)",
-                              textAlign: "center",
-                              lineHeight: "1.2",
+                              display: "flex",
+                              flexDirection: "column",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              gap: "0.25rem",
                             }}
                           >
-                            {item.label}
-                          </Text>
-                        </div>
-                      </Link>
+                            <FontAwesomeIcon
+                              icon={item.icon}
+                              style={{
+                                fontSize: "1.5rem",
+                                color: active
+                                  ? "var(--foreground)"
+                                  : "var(--primary)",
+                              }}
+                            />
+                            <Text
+                              size="x-small"
+                              weight={active ? "bold" : "normal"}
+                              style={{
+                                color: active
+                                  ? "var(--foreground)"
+                                  : "var(--foreground)",
+                                textAlign: "center",
+                                lineHeight: "1.2",
+                              }}
+                            >
+                              {item.label}
+                            </Text>
+                          </div>
+                        </Link>
+                      )}
                     </View>
                   );
                 })}
@@ -195,7 +415,7 @@ export default function RootLayout({
                 minHeight: "100%",
               }}
             >
-              <div style={{ padding: "2rem" }}>{children}</div>
+              <div style={{ padding: "0 2rem 2rem " }}>{children}</div>
             </View>
           </Flex>
         </ThemeProvider>

@@ -107,6 +107,11 @@ html {
   transition: color-scheme var(--transition-normal);
 }
 
+/* Title Bar */
+.title-bar {
+  padding: 1.5rem 1.5rem;
+}
+
 /* Smooth theme transitions */
 html, body, 
 .modern-card, .btn-primary, .btn-secondary,

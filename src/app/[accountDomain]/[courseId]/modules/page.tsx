@@ -48,13 +48,15 @@ export default function ModulesPage() {
   const internalLinkForItem = (item: ModuleItem): string | null => {
     const type = item.type?.toLowerCase();
     if (!item.content_id) return null;
-    if (type === 'assignment') return `/${accountDomain}/${courseId}/assignments/${item.content_id}`;
-    if (type === 'discussion') return `/${accountDomain}/${courseId}/discussions/${item.content_id}`;
+  // Use relative navigation for assignments & files (one level up from /modules)
+  if (type === 'assignment') return `./assignments/${item.content_id}`;
+    if (type === 'discussion') return `./discussions/${item.content_id}`;
     if (type === 'page' && item.html_url) {
       // html_url like /courses/:course_id/pages/:slug
       const slugMatch = item.html_url.match(/\/pages\/(.+)$/);
-      if (slugMatch) return `/${accountDomain}/${courseId}/pages/${slugMatch[1]}`;
+      if (slugMatch) return `./pages/${slugMatch[1]}`;
     }
+  if (type === 'file') return `./files/${item.content_id}`;
     // Additional mappings (files, quizzes, etc.) could be added later
     return null;
   };
@@ -80,7 +82,7 @@ export default function ModulesPage() {
                     <Text as="p" size="x-small" color="secondary">{it.type}{it.published === false ? ' (unpublished)' : ''}</Text>
                     <Text as="p" size="x-small">
                       {internal && <><Link href={internal}>App</Link> | </>}
-                      {it.html_url && account && <Link href={`https://${account.domain}${it.html_url}`}>Canvas</Link>}
+                      {it.html_url && account && <Link href={`${it.html_url}`}>Canvas</Link>}
                       {!internal && !it.html_url && 'No link'}
                     </Text>
                   </View>
