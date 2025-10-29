@@ -1,0 +1,5 @@
+- [] LOCK IN MODE
+- [] Calendar
+- [] Offline Storage / Mass Download
+- [] GPA / Grades
+- [] Better UI
