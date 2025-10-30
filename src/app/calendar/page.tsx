@@ -96,7 +96,7 @@ export default function CalendarPage() {
       try {
         const results = await Promise.all(accounts.map(async (account) => {
           // gather context codes: all courses + visible account calendars
-          let contextCodes: string[] = [];
+          const contextCodes: string[] = [];
           try {
             const courses = await fetchCourses(account);
             contextCodes.push(...courses.map(c => `course_${c.id}`));

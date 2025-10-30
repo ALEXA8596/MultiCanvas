@@ -8,15 +8,15 @@ import {
   fetchPlannerItems,
   getMissingSubmissions,
   PlannerItem,
-} from "../components/canvasApi";
-import DashboardCardComponent from "../components/DashboardCard";
+} from "../../components/canvasApi";
+import DashboardCardComponent from "../../components/DashboardCard";
 import { View } from "@instructure/ui-view";
 import { Flex } from "@instructure/ui-flex";
 import { Heading } from "@instructure/ui-heading";
 import { Text } from "@instructure/ui-text";
 import { Link } from "@instructure/ui-link";
 import { Pill } from "@instructure/ui-pill";
-import TodoSidebar from "../components/TodoSidebar";
+import TodoSidebar from "../../components/TodoSidebar";
 
 
 type CoursesResult = { account: Account; courses: any[] };

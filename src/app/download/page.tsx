@@ -15,7 +15,7 @@ import {
   fetchAnnouncements,
   fetchDiscussionTopics,
   fetchCourseFiles,
-} from "../components/canvasApi";
+} from "../../components/canvasApi";
 
 type CourseWithAccount = { account: Account; course: CanvasCourse };
 
