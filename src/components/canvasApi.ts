@@ -343,6 +343,33 @@ export async function fetchAssignment(account: Account, courseId: number, assign
   return res.json();
 }
 
+// ---- Submissions ----
+export type Submission = {
+  id?: number;
+  user_id?: number;
+  workflow_state?: 'unsubmitted' | 'submitted' | 'graded' | string;
+  submitted_at?: string | null;
+  graded_at?: string | null;
+  score?: number | null;
+  late?: boolean;
+  missing?: boolean;
+};
+
+/** Fetch the current user's submission record for an assignment */
+export async function fetchSelfSubmission(
+  account: Account,
+  courseId: number,
+  assignmentId: number
+): Promise<Submission | null> {
+  const path = `courses/${courseId}/assignments/${assignmentId}/submissions/self`;
+  const res = await canvasFetch(account, path);
+  if (!res.ok) {
+    // Some contexts may not allow viewing; treat as no submission
+    return null;
+  }
+  return res.json();
+}
+
 export async function fetchAssignmentOverrides(account: Account, courseId: number, assignmentId: number): Promise<AssignmentOverride[]> {
   const path = `courses/${courseId}/assignments/${assignmentId}/overrides`;
   const res = await canvasFetch(account, path);
@@ -704,4 +731,104 @@ export async function fetchCourseFile(account: Account, fileId: number): Promise
   if (!res.ok) throw new Error(`Failed to fetch file ${fileId}`);
   const f = await res.json();
   return { ...f, account };
+}
+
+// ---- Account Calendars ----
+// Reference: https://developerdocs.instructure.com/services/canvas/resources/account_calendars#method.account_calendars_api.index
+export interface AccountCalendarInfo {
+  id: number;
+  name?: string;
+  parent_account_id?: number | null;
+  root_account_id?: number | null;
+  visible?: boolean;
+  auto_subscribe?: boolean;
+  sub_account_count?: number;
+  asset_string?: string; // e.g., "account_4"
+  type?: string; // 'account'
+}
+
+export async function fetchAccountCalendars(account: Account): Promise<AccountCalendarInfo[]> {
+  const res = await canvasFetch(account, `account_calendars`);
+  if (!res.ok) throw new Error(`Failed to fetch account calendars for ${account.domain}`);
+  const json = await res.json();
+  return Array.isArray(json) ? json : [];
+}
+
+// ---- Calendar Events ----
+// There is a Calendar Events API (GET /api/v1/calendar_events) that supports
+// start_date, end_date, and context_codes[]=account_#|course_#|group_#|user_#.
+// We query via the proxy canvasFetch to avoid CORS.
+export interface CalendarEvent {
+  id: number;
+  title?: string;
+  description?: string | null; // HTML
+  start_at?: string; // ISO
+  end_at?: string | null; // ISO
+  all_day?: boolean;
+  all_day_date?: string | null; // for all-day
+  location_name?: string | null;
+  location_address?: string | null;
+  context_code?: string; // e.g., course_123, account_4
+  context_name?: string;
+  child_events_count?: number;
+  html_url?: string;
+  // For type=assignment calendar events, Canvas often includes a partial assignment object
+  assignment?: {
+    id?: number;
+    course_id?: number;
+    user_submitted?: boolean; // true if the current user has submitted
+    has_submitted_submissions?: boolean; // aggregate flag
+    html_url?: string;
+  };
+}
+
+export interface FetchCalendarEventsOptions {
+  startDateISO: string; // YYYY-MM-DD or ISO timestamp
+  endDateISO: string;   // YYYY-MM-DD or ISO timestamp
+  contextCodes?: string[]; // e.g., ["course_123", "account_4"]
+  /** Optional Canvas calendar event type filter, e.g. 'assignment' or 'event' */
+  type?: string;
+  perPage?: number; // default 100
+  maxPages?: number; // default 5
+}
+
+export async function fetchCalendarEvents(
+  account: Account,
+  opts: FetchCalendarEventsOptions
+): Promise<CalendarEvent[]> {
+  const perPage = opts.perPage ?? 100;
+  const maxPages = opts.maxPages ?? 5;
+
+  const baseParams = new URLSearchParams();
+  baseParams.set('start_date', opts.startDateISO);
+  baseParams.set('end_date', opts.endDateISO);
+  baseParams.set('per_page', String(perPage));
+  // If context codes are provided, include all
+  (opts.contextCodes || []).forEach((cc) => baseParams.append('context_codes[]', cc));
+  if (opts.type) baseParams.set('type', opts.type);
+
+  let pagePath: string | null = `calendar_events?${baseParams.toString()}`;
+  const all: CalendarEvent[] = [];
+  let pages = 0;
+  while (pagePath && pages < maxPages) {
+    pages++;
+    const res = await canvasFetch(account, pagePath);
+    if (!res.ok) throw new Error(`Failed to fetch calendar events for ${account.domain}`);
+    const batch = await res.json();
+    if (Array.isArray(batch)) all.push(...batch);
+    // Parse Link header for rel="next"
+    const link = res.headers.get('Link') || res.headers.get('link');
+    if (link) {
+      const m = link.split(',').map(s => s.trim()).find(s => /rel="next"/i.test(s));
+      if (m) {
+        const urlMatch = m.match(/<([^>]+)>/);
+        if (urlMatch) {
+          const absolute = urlMatch[1];
+          const idx = absolute.indexOf('/api/v1/');
+          pagePath = idx >= 0 ? absolute.substring(idx + '/api/v1/'.length) : null;
+        } else pagePath = null;
+      } else pagePath = null;
+    } else pagePath = null;
+  }
+  return all;
 }

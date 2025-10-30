@@ -138,8 +138,8 @@ export default function InboxPage() {
               <div style={{ flex: '1 1 auto', minWidth: '240px' }}>
                 <Heading level="h5" margin="0 0 x-small" data-state={c.workflow_state}>
                   {c.subject || '(No subject)'}{' '}
-                  {c.workflow_state === 'unread' && <Pill margin="0 0 0 small" color="info">Unread</Pill>}
-                  {(c.properties||[]).includes('starred') && <Pill margin="0 0 0 small" color="warning">Star</Pill>}
+                  {c.workflow_state === 'unread' && <Pill color="info" style={{ marginLeft: '0.5rem' }}>Unread</Pill>}
+                  {(c.properties||[]).includes('starred') && <Pill color="warning" style={{ marginLeft: '0.5rem' }}>Star</Pill>}
                 </Heading>
                 <Text as="p" size="x-small" color="secondary">
                   {c.participants?.map(p => p.short_name || p.name).filter(Boolean).join(', ') || 'Participants'} • {c.account?.domain}

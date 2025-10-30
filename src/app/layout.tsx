@@ -25,6 +25,8 @@ import {
   faCalendarDays,
   faListCheck,
   faInbox,
+  faDownload,
+  faCog
 } from "@fortawesome/free-solid-svg-icons";
 import { ThemeProvider } from "../components/ThemeProvider";
 import { ThemeToggle } from "../components/ThemeToggle";
@@ -47,6 +49,8 @@ const NAV_ITEMS = [
   { label: "Calendar", icon: faCalendarDays, href: "/calendar" },
   { label: "Todo", icon: faListCheck, href: "/todo" },
   { label: "Inbox", icon: faInbox, href: "/inbox" },
+  { label: "Download", icon: faDownload, href: "/download" },
+  { label: "Settings", icon: faCog, href: "/settings" }
 ];
 
 export default function RootLayout({
@@ -184,7 +188,7 @@ export default function RootLayout({
                             <FontAwesomeIcon
                               icon={item.icon}
                               style={{
-                                fontSize: "1.5rem",
+                                fontSize: "2.5rem",
                                 color: active
                                   ? "var(--foreground)"
                                   : "var(--primary)",
@@ -344,7 +348,6 @@ export default function RootLayout({
                           href={item.href}
                           isWithinText={false}
                           interaction="enabled"
-                          // className={`nav-item-modern ${active ? "active" : ""}`}
                           style={{
                             textDecoration: "none",
                             display: "flex",
@@ -376,7 +379,7 @@ export default function RootLayout({
                             <FontAwesomeIcon
                               icon={item.icon}
                               style={{
-                                fontSize: "1.5rem",
+                                fontSize: "2.5rem",
                                 color: active
                                   ? "var(--foreground)"
                                   : "var(--primary)",
