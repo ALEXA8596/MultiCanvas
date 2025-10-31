@@ -268,7 +268,8 @@ export default function Home() {
                   <Text color="secondary">
                     Get started by adding your Canvas accounts in the accounts tab!
                   </Text>
-                  <View margin="medium 0 0">
+                  <br />
+                  <View margin="medium 0">
                     <Link href="/accounts" className="btn-primary" style={{
                       display: 'inline-block',
                       padding: '0.75rem 1.5rem',
