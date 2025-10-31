@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
 import { View } from "@instructure/ui-view";
+import Link from "next/link";
 import { Heading } from "@instructure/ui-heading";
 import { Text } from "@instructure/ui-text";
 import { Account, fetchAccountCalendars, fetchCalendarEvents, fetchCourses, CalendarEvent } from "../../components/canvasApi";
@@ -164,6 +165,8 @@ export default function CalendarPage() {
   const monthLabel = useMemo(() => month.toLocaleString(undefined, { month: 'long', year: 'numeric' }), [month]);
   const weekdayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+  const activeEventCourseId = activeEvent ? courseIdFromContextCode(activeEvent.context_code || undefined) : null;
+
   return (
     <div className="dashboard-container fade-in">
       <div className="dashboard-header">
@@ -251,9 +254,9 @@ export default function CalendarPage() {
             );
           })}
         </div>
-      </View>
+    </View>
 
-      {activeEvent && (
+    {activeEvent && (
         <div role="dialog" aria-modal="true" className="modal-backdrop" onClick={() => setActiveEvent(null)} style={{
           position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem'
         }}>
@@ -281,9 +284,12 @@ export default function CalendarPage() {
             {activeEvent.description && (
               <Text as="div" size="small" dangerouslySetInnerHTML={{ __html: activeEvent.description }} />
             )}
-            <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
               {activeEvent.html_url && (
-                <a className="btn-primary" href={`https://${activeEvent.account.domain}${activeEvent.html_url}`} target="_blank" rel="noreferrer">Open in Canvas</a>
+                <a className="btn-primary" href={`${activeEvent.html_url}`} target="_blank" rel="noreferrer">Open in Canvas</a>
+              )}
+              {activeEventCourseId && (activeEvent as any).assignment?.id && (
+                <Link href={`/${activeEvent.account.domain}/${activeEventCourseId}/assignments/${(activeEvent as any).assignment.id}`} className="btn-primary">Open in app</Link>
               )}
               <button className="btn" onClick={() => setActiveEvent(null)}>Close</button>
             </div>
