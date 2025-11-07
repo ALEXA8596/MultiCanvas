@@ -93,19 +93,53 @@ export default function CourseTodoSidebar({ account, course, courseId }: CourseT
 
   if (todoLoading) {
     return (
-      <div style={{
-        background: 'var(--surface-elevated)',
-        border: '1px solid var(--border)',
-        borderRadius: 'var(--radius-lg)',
+      <div className="modern-card" style={{
         padding: '2rem',
-        boxShadow: '0 2px 8px var(--shadow-light)',
         width: '22rem'
       }}>
-        <div className="skeleton" style={{ height: '1.5rem', width: '60%', marginBottom: '1rem' }}></div>
-        <div className="skeleton" style={{ height: '8rem', width: '100%', marginBottom: '1rem' }}></div>
-        <div className="skeleton" style={{ height: '1rem', width: '80%', marginBottom: '0.5rem' }}></div>
-        <div className="skeleton" style={{ height: '1rem', width: '70%', marginBottom: '0.5rem' }}></div>
-        <div className="skeleton" style={{ height: '1rem', width: '60%' }}></div>
+        <div style={{ 
+          height: '1.5rem', 
+          width: '60%', 
+          marginBottom: '1rem',
+          background: 'var(--border)',
+          borderRadius: 'var(--radius-sm)',
+          animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+        }}></div>
+        <div style={{ 
+          height: '8rem', 
+          width: '100%', 
+          marginBottom: '1rem',
+          background: 'var(--border)',
+          borderRadius: 'var(--radius-sm)',
+          animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          animationDelay: '0.1s'
+        }}></div>
+        <div style={{ 
+          height: '1rem', 
+          width: '80%', 
+          marginBottom: '0.5rem',
+          background: 'var(--border)',
+          borderRadius: 'var(--radius-sm)',
+          animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          animationDelay: '0.2s'
+        }}></div>
+        <div style={{ 
+          height: '1rem', 
+          width: '70%', 
+          marginBottom: '0.5rem',
+          background: 'var(--border)',
+          borderRadius: 'var(--radius-sm)',
+          animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          animationDelay: '0.3s'
+        }}></div>
+        <div style={{ 
+          height: '1rem', 
+          width: '60%',
+          background: 'var(--border)',
+          borderRadius: 'var(--radius-sm)',
+          animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          animationDelay: '0.4s'
+        }}></div>
       </div>
     );
   }

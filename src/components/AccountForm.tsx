@@ -122,61 +122,149 @@ export default function AccountForm({ onAccountsChange }: { onAccountsChange?: (
   }
 
   return (
-    <section className="w-full max-w-xl mt-4">
-      <form onSubmit={onAdd} className="flex flex-col gap-3">
-        <h3 className="font-semibold">Add Canvas account</h3>
-        <label className="flex flex-col text-sm">
-          Domain
+    <section style={{ width: '100%', maxWidth: '40rem', marginTop: '1rem' }}>
+      <form onSubmit={onAdd} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <h3 style={{ fontWeight: '600', fontSize: '1.125rem', color: 'var(--foreground)' }}>
+          Add Canvas account
+        </h3>
+        <label style={{ display: 'flex', flexDirection: 'column', fontSize: '0.875rem' }}>
+          <span style={{ marginBottom: '0.5rem', color: 'var(--foreground)', fontWeight: '500' }}>
+            Domain
+          </span>
           <input
             value={domain}
             onChange={(e) => setDomain(e.target.value)}
             placeholder="e.g. canvas.example.edu"
-            className="mt-1 p-2 rounded border"
+            style={{
+              padding: '0.75rem',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border)',
+              background: 'var(--surface)',
+              color: 'var(--foreground)',
+              fontSize: '0.875rem',
+              transition: 'all var(--transition-fast)'
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = 'var(--primary)';
+              e.target.style.outline = '2px solid var(--primary)';
+              e.target.style.outlineOffset = '2px';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = 'var(--border)';
+              e.target.style.outline = 'none';
+            }}
           />
         </label>
 
-        <label className="flex flex-col text-sm">
-          API / Access Key
+        <label style={{ display: 'flex', flexDirection: 'column', fontSize: '0.875rem' }}>
+          <span style={{ marginBottom: '0.5rem', color: 'var(--foreground)', fontWeight: '500' }}>
+            API / Access Key
+          </span>
           <input
             value={apiKey}
             onChange={(e) => setApiKey(e.target.value)}
             placeholder="Paste API key"
-            className="mt-1 p-2 rounded border"
+            type="password"
+            style={{
+              padding: '0.75rem',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border)',
+              background: 'var(--surface)',
+              color: 'var(--foreground)',
+              fontSize: '0.875rem',
+              transition: 'all var(--transition-fast)'
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = 'var(--primary)';
+              e.target.style.outline = '2px solid var(--primary)';
+              e.target.style.outlineOffset = '2px';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = 'var(--border)';
+              e.target.style.outline = 'none';
+            }}
           />
         </label>
 
-        <div className="flex gap-2 flex-wrap items-center">
+        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
           <button
             type="submit"
-            className="rounded bg-foreground text-background px-4 py-2"
+            className="btn-primary"
           >
             Add account
           </button>
-          <button type="button" onClick={handleExport} className="rounded bg-foreground text-background border px-3 py-2 text-sm">Export</button>
-          <button type="button" onClick={handleImportClick} className="rounded bg-foreground text-background border px-3 py-2 text-sm">Import</button>
-          <input ref={fileInputRef} onChange={handleFileChange} type="file" accept="application/json" className="hidden" />
-          <div className="text-sm text-green-600 self-center">{message}</div>
+          <button 
+            type="button" 
+            onClick={handleExport} 
+            className="btn-secondary"
+            style={{ fontSize: '0.875rem' }}
+          >
+            Export
+          </button>
+          <button 
+            type="button" 
+            onClick={handleImportClick} 
+            className="btn-secondary"
+            style={{ fontSize: '0.875rem' }}
+          >
+            Import
+          </button>
+          <input ref={fileInputRef} onChange={handleFileChange} type="file" accept="application/json" style={{ display: 'none' }} />
+          {message && (
+            <div style={{ fontSize: '0.875rem', color: 'var(--primary)', fontWeight: '500' }}>
+              {message}
+            </div>
+          )}
         </div>
       </form>
 
       {accounts.length > 0 && (
-        <div className="mt-4">
-          <h4 className="font-medium">Saved accounts</h4>
-          <ul className="mt-2 space-y-2">
+        <div style={{ marginTop: '2rem' }}>
+          <h4 style={{ fontWeight: '500', fontSize: '1rem', color: 'var(--foreground)', marginBottom: '1rem' }}>
+            Saved accounts
+          </h4>
+          <ul style={{ listStyle: 'none', padding: '0', margin: '0', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {accounts.map((a) => (
               <li
                 key={a.id}
-                className="flex items-center justify-between gap-4 rounded p-2 border"
+                className="modern-card"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '1rem',
+                  padding: '1rem'
+                }}
               >
-                <div className="truncate">
-                  <div className="font-mono text-sm">{a.domain}</div>
-                  <div className="text-xs text-muted-foreground truncate">
-                    {a.apiKey}
+                <div style={{ overflow: 'hidden', flex: '1' }}>
+                  <div style={{ fontFamily: 'monospace', fontSize: '0.875rem', color: 'var(--foreground)', fontWeight: '500' }}>
+                    {a.domain}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {a.apiKey.slice(0, 20)}...
                   </div>
                 </div>
                 <button
                   onClick={() => onRemove(a.id)}
-                  className="text-sm text-red-600"
+                  style={{
+                    fontSize: '0.875rem',
+                    color: '#dc2626',
+                    background: 'transparent',
+                    border: '1px solid #dc2626',
+                    padding: '0.5rem 1rem',
+                    borderRadius: 'var(--radius-sm)',
+                    cursor: 'pointer',
+                    transition: 'all var(--transition-fast)',
+                    fontWeight: '500'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#dc2626';
+                    e.currentTarget.style.color = 'white';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.color = '#dc2626';
+                  }}
                 >
                   Remove
                 </button>

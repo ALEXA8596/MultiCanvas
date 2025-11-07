@@ -168,34 +168,104 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="dashboard-container fade-in">
+    <div className="fade-in" style={{
+      width: '100%',
+      maxWidth: '100%'
+    }}>
       {/* Dashboard Header */}
-      <div className="dashboard-header">
-        <Heading level="h2" margin="0" className="text-gradient">
+      <div style={{
+        marginBottom: '2rem',
+        textAlign: 'center'
+      }}>
+        <Heading level="h2" margin="0 0 small" style={{
+          background: 'var(--gradient-primary)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text',
+          fontWeight: '700'
+        }}>
           Dashboard Overview
         </Heading>
-        <Text size="medium" color="secondary">
+        <Text size="medium" style={{ color: 'var(--text-muted)' }}>
           Your Canvas courses and activities at a glance
         </Text>
       </div>
 
       {/* Dashboard Stats */}
-      <div className="dashboard-stats">
-        <div className="stat-card">
-          <div className="stat-number">{mergedDashboardCards.length}</div>
-          <div className="stat-label">Active Courses</div>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gap: '1.5rem',
+        marginBottom: '2rem',
+        marginInline: 'auto'
+      }}>
+        <div className="modern-card" style={{
+          padding: '1.5rem',
+          textAlign: 'center'
+        }}>
+          <div style={{ 
+            fontSize: '2.5rem', 
+            fontWeight: '700', 
+            color: 'var(--primary)',
+            marginBottom: '0.5rem'
+          }}>{mergedDashboardCards.length}</div>
+          <div style={{ 
+            fontSize: '0.875rem', 
+            color: 'var(--text-muted)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em'
+          }}>Active Courses</div>
         </div>
-        <div className="stat-card">
-          <div className="stat-number">{assignmentItems.length}</div>
-          <div className="stat-label">Assignments</div>
+        <div className="modern-card" style={{
+          padding: '1.5rem',
+          textAlign: 'center'
+        }}>
+          <div style={{ 
+            fontSize: '2.5rem', 
+            fontWeight: '700', 
+            color: 'var(--primary)',
+            marginBottom: '0.5rem'
+          }}>{assignmentItems.length}</div>
+          <div style={{ 
+            fontSize: '0.875rem', 
+            color: 'var(--text-muted)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em'
+          }}>Assignments</div>
         </div>
-        <div className="stat-card">
-          <div className="stat-number">{announcementItems.length}</div>
-          <div className="stat-label">Announcements</div>
+        <div className="modern-card" style={{
+          padding: '1.5rem',
+          textAlign: 'center'
+        }}>
+          <div style={{ 
+            fontSize: '2.5rem', 
+            fontWeight: '700', 
+            color: 'var(--primary)',
+            marginBottom: '0.5rem'
+          }}>{announcementItems.length}</div>
+          <div style={{ 
+            fontSize: '0.875rem', 
+            color: 'var(--text-muted)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em'
+          }}>Announcements</div>
         </div>
-        <div className="stat-card">
-          <div className="stat-number">{missingSubmissions.length}</div>
-          <div className="stat-label">Missing Items</div>
+        <div className="modern-card" style={{
+          padding: '1.5rem',
+          textAlign: 'center'
+        }}>
+          <div style={{ 
+            fontSize: '2.5rem', 
+            fontWeight: '700', 
+            color: 'var(--primary)',
+            marginBottom: '0.5rem'
+          }}>{missingSubmissions.length}</div>
+          <div style={{ 
+            fontSize: '0.875rem', 
+            color: 'var(--text-muted)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em'
+          }}>Missing Items</div>
         </div>
       </div>
 
@@ -204,13 +274,15 @@ export default function Home() {
         gap="large" 
         alignItems="start" 
         wrap="wrap"
-        className="dashboard-main-layout"
+        style={{
+          gap: '2rem'
+        }}
       >
-        <Flex.Item shouldGrow shouldShrink className="dashboard-main-content">
+        <Flex.Item shouldGrow shouldShrink style={{ minWidth: '300px', flex: '1' }}>
           <View as="section" margin="0" width="100%">
             <View as="div" margin="0" width="100%">
               <Flex alignItems="center" gap="small" margin="0 0 large">
-                <Heading level="h3" margin="0">
+                <Heading level="h3" margin="0" style={{ color: 'var(--foreground)' }}>
                   Course Cards
                 </Heading>
                 <Pill 
@@ -218,7 +290,10 @@ export default function Home() {
                   style={{
                     background: 'var(--gradient-primary)',
                     color: 'white',
-                    border: 'none'
+                    border: 'none',
+                    padding: '0.25rem 0.75rem',
+                    borderRadius: 'var(--radius-sm)',
+                    fontWeight: '600'
                   }}
                 >
                   {mergedDashboardCards.length}
@@ -226,28 +301,44 @@ export default function Home() {
               </Flex>
               
               {loading && (
-                <div className="dashboard-cards-grid">
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                  gap: '1.5rem'
+                }}>
                   {[...Array(6)].map((_, i) => (
-                    <div key={i} className="dashboard-card-modern">
-                      <div className="dashboard-card-header">
-                        <div className="skeleton" style={{ height: '1.5rem', width: '70%', marginBottom: '0.5rem' }}></div>
-                        <div className="skeleton" style={{ height: '1rem', width: '50%' }}></div>
-                      </div>
-                      <div className="dashboard-card-body">
-                        <div className="skeleton" style={{ height: '1rem', width: '100%', marginBottom: '0.5rem' }}></div>
-                        <div className="skeleton" style={{ height: '1rem', width: '80%' }}></div>
-                      </div>
+                    <div key={i} className="modern-card" style={{ padding: '1.5rem' }}>
+                      <div style={{ 
+                        height: '1.5rem', 
+                        width: '70%', 
+                        marginBottom: '0.5rem',
+                        background: 'var(--border)',
+                        borderRadius: 'var(--radius-sm)',
+                        animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                      }}></div>
+                      <div style={{ 
+                        height: '1rem', 
+                        width: '50%',
+                        background: 'var(--border)',
+                        borderRadius: 'var(--radius-sm)',
+                        animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        animationDelay: '0.1s'
+                      }}></div>
                     </div>
                   ))}
                 </div>
               )}
 
               {!loading && (
-                <div className="dashboard-cards-grid">
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
+                  gap: '1.5rem'
+                }}>
                   {mergedDashboardCards.map((card, index) => (
                     <div
                       key={`${card.id}-${card.account.id}`}
-                      className="dashboard-card-modern fade-in"
+                      className="fade-in"
                       style={{ animationDelay: `${index * 0.1}s` }}
                     >
                       <DashboardCardComponent card={card} />
@@ -257,24 +348,21 @@ export default function Home() {
               )}
               
               {mergedDashboardCards.length === 0 && !loading && (
-                <div style={{
+                <div className="modern-card" style={{
                   textAlign: 'center',
-                  padding: '3rem',
-                  background: 'var(--surface-elevated)',
-                  borderRadius: 'var(--radius-lg)',
-                  border: '1px solid var(--border)'
+                  padding: '3rem'
                 }}>
-                  <Heading level="h4" margin="0 0 small">No Courses Found</Heading>
-                  <Text color="secondary">
+                  <Heading level="h4" margin="0 0 small" style={{ color: 'var(--foreground)' }}>
+                    No Courses Found
+                  </Heading>
+                  <Text style={{ color: 'var(--text-muted)' }}>
                     Get started by adding your Canvas accounts in the accounts tab!
                   </Text>
                   <br />
                   <View margin="medium 0">
                     <Link href="/accounts" className="btn-primary" style={{
                       display: 'inline-block',
-                      padding: '0.75rem 1.5rem',
-                      textDecoration: 'none',
-                      borderRadius: 'var(--radius-md)'
+                      textDecoration: 'none'
                     }}>
                       Add Accounts
                     </Link>
@@ -285,8 +373,11 @@ export default function Home() {
           </View>
         </Flex.Item>
 
-          <Flex.Item shouldShrink shouldGrow={false} className="todo-sidebar-container">
-            <div className="slide-in-right" style={{ animationDelay: '0.3s' }}>
+          <Flex.Item shouldShrink shouldGrow={false} style={{ 
+            minWidth: '320px',
+            maxWidth: '400px'
+          }}>
+            <div className="fade-in" style={{ animationDelay: '0.3s' }}>
               <TodoSidebar 
                 assignments={assignmentItems}
                 announcements={announcementItems}

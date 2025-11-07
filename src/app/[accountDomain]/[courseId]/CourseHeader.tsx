@@ -39,40 +39,72 @@ export default function CourseHeader() {
 
   if (error) {
     return (
-      <div style={{
+      <div className="modern-card" style={{
         padding: '1rem',
         background: '#fef2f2',
         border: '1px solid #fecaca',
-        borderRadius: 'var(--radius-md)',
         color: '#dc2626'
       }}>
-        <Text color="danger">{error}</Text>
+        <Text style={{ color: '#dc2626' }}>{error}</Text>
       </div>
     );
   }
   
   if (!course) {
     return (
-      <div className="course-header-modern">
-        <div className="skeleton" style={{ height: '2.5rem', width: '60%', marginBottom: '0.5rem' }}></div>
-        <div className="skeleton" style={{ height: '1.125rem', width: '40%' }}></div>
+      <div style={{
+        padding: '2rem',
+        background: 'var(--gradient-primary)',
+        borderRadius: 'var(--radius-lg)',
+        marginBottom: '1.5rem'
+      }}>
+        <div style={{ 
+          height: '2.5rem', 
+          width: '60%', 
+          marginBottom: '0.5rem',
+          background: 'rgba(255, 255, 255, 0.3)',
+          borderRadius: 'var(--radius-sm)',
+          animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+        }}></div>
+        <div style={{ 
+          height: '1.125rem', 
+          width: '40%',
+          background: 'rgba(255, 255, 255, 0.2)',
+          borderRadius: 'var(--radius-sm)',
+          animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          animationDelay: '0.1s'
+        }}></div>
       </div>
     );
   }
 
   return (
-    <div className="course-header-modern fade-in">
-      <Heading level="h1" margin="0" className="course-title">
+    <div className="fade-in" style={{
+      padding: '2rem',
+      background: 'var(--gradient-primary)',
+      borderRadius: 'var(--radius-lg)',
+      marginBottom: '1.5rem',
+      boxShadow: '0 4px 12px var(--shadow-medium)'
+    }}>
+      <Heading level="h1" margin="0 0 small" style={{
+        color: 'white',
+        fontSize: '2rem',
+        fontWeight: '700'
+      }}>
         {course.name}
       </Heading>
-      <div className="course-code">
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.25rem'
+      }}>
         {course.course_code && (
-          <Text size="large" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+          <Text size="large" style={{ color: 'rgba(255, 255, 255, 0.95)', fontWeight: '500' }}>
             {course.course_code}
           </Text>
         )}
         {account && (
-          <Text size="medium" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>
+          <Text size="medium" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>
             📚 {account.domain}
           </Text>
         )}

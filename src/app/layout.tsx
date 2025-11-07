@@ -105,45 +105,32 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <ThemeProvider>
-          {/* <View as="div" background="secondary" className="fade-in" style={{ 
-            borderBottom: '1px solid var(--border)',
-            background: 'var(--gradient-secondary)',
-            boxShadow: '0 2px 8px var(--shadow-light)'
-          }}>
-            <Flex alignItems="center" gap="large" wrap="no-wrap" padding="medium large">
-              <Heading level="h3" margin="0 small 0 0" className="text-gradient">
-                Canvas MultiInstance
-              </Heading>
-            </Flex>
-          </View> */}
           <Flex
             alignItems="center"
             gap="large"
             wrap="no-wrap"
-            padding="medium large"
+            padding="small small"
             justifyItems="space-between"
             className="title-bar"
           >
-            <Heading level="h3" margin="0 small 0 0" className="text-gradient">
-              Canvas MultiInstance
+            <Heading level="h3" margin="0 0 0 0" className="text-gradient">
+              MultiCanvas
             </Heading>
             <div style={{ marginLeft: "auto" }}>
               <ThemeToggle />
             </div>
           </Flex>
-          <Flex
+          <View
             as="div"
-            alignItems="start"
-            style={{ minHeight: "calc(100vh - 80px)" }}
+            className="layout-shell"
           >
             <View
               background="primary"
-              padding="medium 0"
+              padding="low 0"
               width="5rem"
               borderWidth="0 small 0 0"
               shadow="resting"
               as="nav"
-              className="nav-modern slide-in-left"
               style={{
                 background: "var(--surface-elevated)",
                 borderRight: "1px solid var(--border)",
@@ -151,6 +138,7 @@ export default function RootLayout({
                 display: "flex",
                 flexDirection: "column",
               }}
+              className="nav-modern slide-in-left layout-shell__nav"
             >
               <Flex
                 direction="column"
@@ -411,16 +399,16 @@ export default function RootLayout({
               padding="0"
               margin="0"
               overflowY="auto"
-              className="slide-in-right"
+              className="slide-in-right layout-shell__main"
               style={{
-                flex: 1,
                 background: "var(--background)",
                 minHeight: "100%",
+                width: "100%"
               }}
             >
               <div style={{ padding: "0 2rem 2rem " }}>{children}</div>
             </View>
-          </Flex>
+          </View>
         </ThemeProvider>
       </body>
     </html>

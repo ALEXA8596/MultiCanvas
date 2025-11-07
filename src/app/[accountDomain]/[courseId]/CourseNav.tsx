@@ -26,9 +26,18 @@ export default function CourseNav({ accountDomain, courseId }: CourseNavProps) {
   const base = `/${accountDomain}/${courseId}`;
 
   return (
-    <nav className="course-nav-modern slide-in-right">
+    <nav style={{
+      background: 'var(--surface-elevated)',
+      border: '1px solid var(--border)',
+      borderRadius: 'var(--radius-lg)',
+      padding: '0.5rem',
+      marginBottom: '1.5rem',
+      boxShadow: '0 2px 4px var(--shadow-light)'
+    }}>
       <ul style={{ 
-        display: 'contents', 
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: '0.5rem',
         listStyle: 'none', 
         margin: 0, 
         padding: 0 
@@ -37,28 +46,38 @@ export default function CourseNav({ accountDomain, courseId }: CourseNavProps) {
           const href = slug ? `${base}/${slug}` : base;
           const active = pathname === href;
           return (
-            <li key={href} className="scale-in" style={{
+            <li key={href} className="fade-in" style={{
               animationDelay: `${index * 0.05}s`
             }}>
-              <Link 
-                href={href} 
-                isWithinText={false}
-                className={`course-nav-item ${active ? 'active' : ''}`}
+              <a 
+                href={href}
                 style={{
                   textDecoration: 'none',
-                  display: 'block'
+                  display: 'block',
+                  padding: '0.5rem 1rem',
+                  borderRadius: 'var(--radius-md)',
+                  background: active ? 'var(--gradient-primary)' : 'transparent',
+                  color: active ? 'white' : 'var(--foreground)',
+                  fontWeight: active ? '600' : '500',
+                  fontSize: '0.875rem',
+                  transition: 'all var(--transition-fast)',
+                  border: active ? 'none' : '1px solid transparent'
+                }}
+                onMouseEnter={(e) => {
+                  if (!active) {
+                    e.currentTarget.style.background = 'var(--secondary)';
+                    e.currentTarget.style.borderColor = 'var(--border)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!active) {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.borderColor = 'transparent';
+                  }
                 }}
               >
-                <Text 
-                  size="small" 
-                  weight={active ? "bold" : "normal"}
-                  style={{ 
-                    color: 'inherit'
-                  }}
-                >
-                  {label}
-                </Text>
-              </Link>
+                {label}
+              </a>
             </li>
           );
         })}

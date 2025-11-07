@@ -107,10 +107,10 @@ html {
   transition: color-scheme var(--transition-normal);
 }
 
-/* Title Bar */
+/* Title Bar
 .title-bar {
-  padding: 1.5rem 1.5rem;
-}
+  padding: 1rem 1rem !important;
+} */
 
 /* Smooth theme transitions */
 html, body, 
@@ -252,4 +252,18 @@ button, a, [role="button"], .cursor-pointer {
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
+}
+
+.layout-shell {
+  display: grid;
+  grid-template-columns: 5rem minmax(0, 1fr);
+  min-height: calc(100vh - 80px);
+}
+
+.layout-shell__nav {
+  grid-column: 1;
+}
+
+.layout-shell__main {
+  grid-column: 2;
 }

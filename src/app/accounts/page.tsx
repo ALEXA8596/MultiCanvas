@@ -56,22 +56,47 @@ export default function Home() {
   }, [])
 
   return (
-    <div className="accounts-container fade-in">
+    <div className="fade-in" style={{
+      padding: '2rem',
+      margin: '0 auto'
+    }}>
       {/* Page Header */}
-      <div className="dashboard-header">
-        <Heading level="h2" margin="0" className="text-gradient">
+      <div style={{
+        marginBottom: '2rem',
+        textAlign: 'center'
+      }}>
+        <Heading level="h2" margin="0 0 small" style={{
+          background: 'var(--gradient-primary)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text',
+          fontWeight: '700'
+        }}>
           Account Management
         </Heading>
-        <Text size="medium" color="secondary">
+        <Text size="medium" style={{ color: 'var(--text-muted)' }}>
           Manage your Canvas accounts and view connected courses
         </Text>
       </div>
 
-      <div className="accounts-grid">
-        <div className="account-form-section slide-in-left">
-          <Heading level="h3" margin="0 0 large">
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+        gap: '2rem'
+      }}>
+        <div className="fade-in" style={{ animationDelay: '0.1s' }}>
+          <Heading level="h3" margin="0 0 large" style={{ color: 'var(--foreground)' }}>
             <Flex alignItems="center" gap="medium">
-              <div className="todo-section-icon">
+              <div style={{
+                width: '2.5rem',
+                height: '2.5rem',
+                borderRadius: '50%',
+                background: 'var(--gradient-primary)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white'
+              }}>
                 <FontAwesomeIcon icon={faUser} />
               </div>
               Canvas Accounts
@@ -80,10 +105,19 @@ export default function Home() {
           <AccountForm onAccountsChange={setAccounts} />
         </div>
 
-        <div className="courses-list-section slide-in-right">
-          <Heading level="h4" margin="0 0 large">
+        <div className="fade-in" style={{ animationDelay: '0.2s' }}>
+          <Heading level="h4" margin="0 0 large" style={{ color: 'var(--foreground)' }}>
             <Flex alignItems="center" gap="medium">
-              <div className="todo-section-icon" style={{ background: 'var(--accent)' }}>
+              <div style={{
+                width: '2.5rem',
+                height: '2.5rem',
+                borderRadius: '50%',
+                background: 'var(--accent)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'white'
+              }}>
                 <FontAwesomeIcon icon={faBookOpen} />
               </div>
               Connected Courses
@@ -93,47 +127,66 @@ export default function Home() {
           {loading && (
             <div>
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="course-list-item">
-                  <div className="skeleton" style={{ height: '1.5rem', width: '60%', marginBottom: '0.5rem' }}></div>
-                  <div className="skeleton" style={{ height: '1rem', width: '80%' }}></div>
+                <div key={i} className="modern-card" style={{ padding: '1rem', marginBottom: '1rem' }}>
+                  <div style={{ 
+                    height: '1.5rem', 
+                    width: '60%', 
+                    marginBottom: '0.5rem',
+                    background: 'var(--border)',
+                    borderRadius: 'var(--radius-sm)',
+                    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                  }}></div>
+                  <div style={{ 
+                    height: '1rem', 
+                    width: '80%',
+                    background: 'var(--border)',
+                    borderRadius: 'var(--radius-sm)',
+                    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    animationDelay: '0.1s'
+                  }}></div>
                 </div>
               ))}
             </div>
           )}
           
           {error && (
-            <div style={{
+            <div className="modern-card" style={{
               padding: '1rem',
               background: '#fef2f2',
               border: '1px solid #fecaca',
-              borderRadius: 'var(--radius-md)',
               color: '#dc2626'
             }}>
-              <Text color="danger">Error: {error}</Text>
+              <Text style={{ color: '#dc2626' }}>Error: {error}</Text>
             </div>
           )}
           
           {!loading && coursesData.length === 0 && (
-            <div style={{
+            <div className="modern-card" style={{
               textAlign: 'center',
-              padding: '2rem',
-              background: 'var(--secondary)',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--border)'
+              padding: '2rem'
             }}>
-              <Text color="secondary">No courses found. Add a Canvas account to get started!</Text>
+              <Text style={{ color: 'var(--text-muted)' }}>
+                No courses found. Add a Canvas account to get started!
+              </Text>
             </div>
           )}
           
           {coursesData.length > 0 && (
-            <div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               {coursesData.map(({ account, courses }, accountIndex) => (
-                <div key={account.id} className="course-list-item fade-in" style={{
+                <div key={account.id} className="modern-card fade-in" style={{
+                  padding: '1.5rem',
                   animationDelay: `${accountIndex * 0.1}s`
                 }}>
-                  <Heading level="h5" margin="0 0 small">
+                  <Heading level="h5" margin="0 0 small" style={{ color: 'var(--foreground)' }}>
                     <Flex alignItems="center" gap="small">
-                      <span className="status-dot status-success"></span>
+                      <span style={{
+                        width: '8px',
+                        height: '8px',
+                        borderRadius: '50%',
+                        background: '#22c55e',
+                        display: 'inline-block'
+                      }}></span>
                       {account.domain}
                     </Flex>
                   </Heading>
@@ -141,7 +194,7 @@ export default function Home() {
                     <div style={{ paddingLeft: '1rem' }}>
                       {courses.map((course: any, courseIndex) => (
                         <div key={course.id} style={{
-                          padding: '0.5rem 0',
+                          padding: '0.75rem 0',
                           borderBottom: courseIndex < courses.length - 1 ? '1px solid var(--border)' : 'none'
                         }}>
                           <Link 
@@ -149,7 +202,8 @@ export default function Home() {
                             style={{
                               textDecoration: 'none',
                               color: 'var(--primary)',
-                              fontWeight: '500'
+                              fontWeight: '500',
+                              transition: 'color var(--transition-fast)'
                             }}
                           >
                             <Text size="small">{course.name}</Text>
@@ -157,7 +211,7 @@ export default function Home() {
                           <br />
                           {course.course_code && (
                             <View margin="xxx-small 0 0">
-                              <Text size="x-small" color="secondary">
+                              <Text size="x-small" style={{ color: 'var(--text-muted)' }}>
                                 {course.course_code}
                               </Text>
                             </View>
@@ -167,7 +221,7 @@ export default function Home() {
                     </div>
                   ) : (
                     <View margin="0 0 0 medium">
-                      <Text size="small" color="secondary">
+                      <Text size="small" style={{ color: 'var(--text-muted)' }}>
                         No courses available
                       </Text>
                     </View>

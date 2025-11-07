@@ -748,9 +748,15 @@ export default function TodoSidebar({
       padding="medium"
       maxHeight="100vh"
       overflowY="auto"
+      style={{
+        background: 'var(--surface-elevated)',
+        border: '1px solid var(--border)',
+        borderRadius: 'var(--radius-lg)',
+        boxShadow: '0 2px 8px var(--shadow-light)'
+      }}
       className="todo-sidebar"
     >
-      <Heading level="h4" margin="0 0 small">
+      <Heading level="h4" margin="0 0 small" style={{ color: 'var(--foreground)' }}>
         To-Do
       </Heading>
       <div

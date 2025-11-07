@@ -52,7 +52,7 @@ export default function DashboardCardComponent({ card }: Props) {
 
   return (
     <div
-      className="dashboard-card-modern-inner ic-DashboardCard"
+      className="ic-DashboardCard"
       data-course-id={card.id}
       role="button"
       tabIndex={0}
@@ -64,39 +64,21 @@ export default function DashboardCardComponent({ card }: Props) {
         display: 'flex',
         flexDirection: 'column'
       }}
-      onMouseEnter={(e) => {
-        const card = e.currentTarget.querySelector('.ic-DashboardCard__box') as HTMLElement;
-        if (card) {
-          card.style.transform = 'translateY(-2px)';
-          card.style.boxShadow = '0 8px 25px rgba(0, 0, 0, 0.2)';
-        }
-      }}
-      onMouseLeave={(e) => {
-        const card = e.currentTarget.querySelector('.ic-DashboardCard__box') as HTMLElement;
-        if (card) {
-          card.style.transform = 'translateY(0)';
-          card.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-        }
-      }}
     >
-      <div className="ic-DashboardCard__box__container" style={{ height: '100%' }}>
+      <div style={{ height: '100%' }}>
         <div
-          className="ic-DashboardCard__box"
+          className="modern-card"
           style={{ 
-            background: 'var(--surface-elevated)', 
-            border: '2px solid #d1d5db',
-            borderRadius: 'var(--radius-lg)', 
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
             height: '100%',
             minHeight: card.image ? '240px' : '160px',
             display: 'flex',
             flexDirection: 'column',
-            transition: 'all var(--transition-normal)',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            padding: '0'
           }}
         >
           {card.image && !imageError ? (
-            <div className="ic-DashboardCard__header_image" style={{ position: 'relative' }}>
+            <div style={{ position: 'relative' }}>
               {!imageLoaded && (
                 <div
                   style={{
@@ -134,7 +116,6 @@ export default function DashboardCardComponent({ card }: Props) {
             </div>
           ) : card.color ? (
             <div 
-              className="ic-DashboardCard__header_color"
               style={{
                 width: '100%',
                 height: '120px',
@@ -144,7 +125,6 @@ export default function DashboardCardComponent({ card }: Props) {
             />
           ) : (
             <div 
-              className="ic-DashboardCard__header_gradient"
               style={{
                 width: '100%',
                 height: '120px',
@@ -163,57 +143,67 @@ export default function DashboardCardComponent({ card }: Props) {
             </div>
           )}
           <div 
-            className="ic-DashboardCard__header"
             style={{ 
-              padding: (card.image && !imageError) || card.color || !card.image ? '1rem' : '1.5rem 1rem' 
+              padding: '1rem',
+              flex: '1',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between'
             }}
           >
-            <div className="ic-DashboardCard__header_content">
+            <div>
               <Heading
                 level="h5"
-                margin="0"
+                margin="0 0 x-small"
                 themeOverride={{ h5FontWeight: 600 }}
-                className="ic-DashboardCard__header-title"
+                style={{ color: 'var(--foreground)' }}
               >
                 {card.longName || card.shortName || card.originalName}
               </Heading>
-              {/* {card.courseCode && (
-                <Text
-                  as="p"
-                  size="small"
-                  color="secondary"
-                  className="ic-DashboardCard__header-subtitle"
-                >
-                  {card.courseCode}
-                </Text>
-              )} */}
               {card.term && (
                 <Text
                   as="p"
                   size="x-small"
-                  color="secondary"
-                  className="ic-DashboardCard__header-term"
+                  style={{ color: 'var(--text-muted)', margin: '0' }}
                 >
                   {card.term}
                 </Text>
               )}
             </div>
-            <div className="ic-DashboardCard__action-layout">
-              <div className="ic-DashboardCard__action-container">
-                <Text as="p" className="dashboard-card__footerLink">
-                  <Link
-                    href={baseCourseUrl}
-                    onClick={(e) => { e.stopPropagation(); }}
-                    className="ic-DashboardCard__action"
-                  >Open Course</Link>
-                </Text>
-                <Text size="x-small" color="secondary">
-                  <Link
-                    href={coursesPathUrl}
-                    onClick={(e) => { e.stopPropagation(); }}
-                  >{card.account.domain}</Link>
-                </Text>
-              </div>
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.25rem',
+              marginTop: '0.75rem'
+            }}>
+              <Text as="p" style={{ margin: '0' }}>
+                <Link
+                  href={baseCourseUrl}
+                  onClick={(e) => { e.stopPropagation(); }}
+                  style={{
+                    color: 'var(--primary)',
+                    textDecoration: 'none',
+                    fontWeight: '500',
+                    fontSize: '0.875rem',
+                    transition: 'color var(--transition-fast)'
+                  }}
+                >
+                  Open Course
+                </Link>
+              </Text>
+              <Text size="x-small" style={{ color: 'var(--text-muted)', margin: '0' }}>
+                <Link
+                  href={coursesPathUrl}
+                  onClick={(e) => { e.stopPropagation(); }}
+                  style={{
+                    color: 'var(--text-muted)',
+                    textDecoration: 'none',
+                    transition: 'color var(--transition-fast)'
+                  }}
+                >
+                  {card.account.domain}
+                </Link>
+              </Text>
             </div>
           </div>
         </div>
