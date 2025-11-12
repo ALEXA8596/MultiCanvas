@@ -5,17 +5,35 @@ import { Heading } from "@instructure/ui-heading";
 import { Text } from "@instructure/ui-text";
 import { Link } from "@instructure/ui-link";
 import Image from "next/image";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCog } from "@fortawesome/free-solid-svg-icons";
+import { CourseSetting } from "@/lib/db";
+import { getCourseDisplay } from "@/lib/courseDisplay";
 // import "../app/stylesheets/bundles/dashboard_card-3d0c6d4d27.css";
 
 type Props = {
   card: DashboardCardType & { account: Account };
+  setting?: CourseSetting | null;
+  onOpenSettings?: (course: {
+    account: Account;
+    courseId: number;
+    card: DashboardCardType;
+    setting?: CourseSetting | null;
+  }) => void;
 };
 
-export default function DashboardCardComponent({ card }: Props) {
+export default function DashboardCardComponent({ card, setting, onOpenSettings }: Props) {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const baseCourseUrl = `${card.account.domain}/${card.id}`;
   const coursesPathUrl = `${card.account.domain}/courses/${card.id}`;
+  const fallbackName =
+    card.originalName || card.longName || card.shortName || setting?.courseName || "Course";
+  const { displayName, subtitle } = getCourseDisplay({
+    actualName: card.originalName || card.longName || card.shortName || setting?.courseName,
+    nickname: setting?.nickname,
+    fallback: fallbackName,
+  });
 
   // Generate a consistent random gradient based on card ID
   const generateRandomGradient = useCallback(() => {
@@ -77,6 +95,37 @@ export default function DashboardCardComponent({ card }: Props) {
             padding: '0'
           }}
         >
+          <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0.5rem' }}>
+            <button
+              type="button"
+              aria-label={`Edit settings for ${displayName}`}
+              onClick={(event) => {
+                event.stopPropagation();
+                if (onOpenSettings) {
+                  onOpenSettings({
+                    account: card.account,
+                    courseId: Number(card.id),
+                    card,
+                    setting: setting ?? undefined,
+                  });
+                }
+              }}
+              style={{
+                border: 'none',
+                background: 'rgba(255,255,255,0.9)',
+                borderRadius: '999px',
+                padding: '0.35rem 0.6rem',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.3rem',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
+              }}
+            >
+              <FontAwesomeIcon icon={faCog} style={{ color: 'var(--primary)' }} />
+              <span style={{ fontSize: '0.75rem', color: 'var(--foreground)' }}>Settings</span>
+            </button>
+          </div>
           {card.image && !imageError ? (
             <div style={{ position: 'relative' }}>
               {!imageLoaded && (
@@ -161,8 +210,17 @@ export default function DashboardCardComponent({ card }: Props) {
                 themeOverride={{ h5FontWeight: 600 }}
                 style={{ color: 'var(--foreground)' }}
               >
-                {card.longName || card.shortName || card.originalName}
+                {displayName}
               </Heading>
+              {subtitle && (
+                <Text
+                  as="p"
+                  size="x-small"
+                  style={{ color: "var(--text-muted)", margin: "0" }}
+                >
+                  {subtitle}
+                </Text>
+              )}
               {card.term && (
                 <Text
                   as="p"
@@ -207,6 +265,11 @@ export default function DashboardCardComponent({ card }: Props) {
                   {card.account.domain}
                 </Link>
               </Text>
+              {typeof setting?.credits === 'number' && (
+                <Text size="x-small" color="secondary" style={{ margin: '0' }}>
+                  Credits: {setting.credits}
+                </Text>
+              )}
             </div>
           </div>
         </div>

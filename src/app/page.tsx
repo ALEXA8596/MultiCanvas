@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Account,
   fetchDashboardCards,
@@ -15,7 +15,29 @@ import { Heading } from "@instructure/ui-heading";
 import { Text } from "@instructure/ui-text";
 import { Link } from "@instructure/ui-link";
 import { Pill } from "@instructure/ui-pill";
+import { TextInput } from "@instructure/ui-text-input";
+import { NumberInput } from "@instructure/ui-number-input";
+import { Checkbox } from "@instructure/ui-checkbox";
+import { Button } from "@instructure/ui-buttons";
+import {
+  CourseSetting,
+  getCourseSettingId,
+  getCourseSettings,
+  updateCourseSetting,
+  upsertCourseSettings,
+} from "@/lib/db";
+import { getCourseDisplay } from "@/lib/courseDisplay";
 import TodoSidebar from "../components/TodoSidebar";
+
+type SettingsModalState = {
+  id: string;
+  account: Account;
+  courseId: number;
+  card: DashboardCard & { account: Account };
+  draft: CourseSetting;
+  saving: boolean;
+  error: string | null;
+};
 
 
 export default function Home() {
@@ -29,6 +51,118 @@ export default function Home() {
   const [missingSubmissions, setMissingSubmissions] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [courseSettings, setCourseSettings] = useState<Record<string, CourseSetting>>({});
+  const [settingsModal, setSettingsModal] = useState<SettingsModalState | null>(null);
+
+  const handleOpenCourseSettings = useCallback(
+    ({ account, courseId, card, setting }: {
+      account: Account;
+      courseId: number;
+      card: DashboardCard;
+      setting?: CourseSetting | null;
+    }) => {
+      const id = getCourseSettingId(account.domain, courseId);
+      const existing = setting ?? courseSettings[id];
+      const cardWithAccount = { ...card, account } as DashboardCard & { account: Account };
+      const fallbackName =
+        existing?.courseName || card.longName || card.shortName || card.originalName || `Course ${card.id}`;
+      const draft: CourseSetting = {
+        id,
+        accountDomain: account.domain,
+        courseId,
+        courseName: fallbackName,
+        courseCode: existing?.courseCode || card.shortName || card.originalName,
+        nickname: existing?.nickname ?? "",
+        order: existing?.order,
+        visible: existing?.visible !== false,
+        credits: existing?.credits,
+      };
+      setSettingsModal({
+        id,
+        account,
+        courseId,
+        card: cardWithAccount,
+        draft,
+        saving: false,
+        error: null,
+      });
+    },
+    [courseSettings]
+  );
+
+  const handleCloseCourseSettings = useCallback(() => {
+    setSettingsModal(null);
+  }, []);
+
+  const handleDraftChange = useCallback((patch: Partial<CourseSetting>) => {
+    setSettingsModal((current) =>
+      current
+        ? {
+            ...current,
+            draft: {
+              ...current.draft,
+              ...patch,
+            },
+          }
+        : current
+    );
+  }, []);
+
+  const handleSaveCourseSettings = useCallback(async () => {
+    if (!settingsModal) return;
+    const current = settingsModal;
+    setSettingsModal({ ...current, saving: true, error: null });
+
+    const fallbackName =
+      current.draft.courseName?.trim() ||
+      current.card.longName ||
+      current.card.shortName ||
+      current.card.originalName ||
+      `Course ${current.card.id}`;
+    const normalizedDraft: CourseSetting = {
+      id: current.id,
+      accountDomain: current.account.domain,
+      courseId: current.courseId,
+      courseName: fallbackName,
+      courseCode: current.draft.courseCode?.trim() || current.card.shortName || current.card.originalName,
+      nickname: current.draft.nickname?.trim() || "",
+      order: current.draft.order,
+      visible: current.draft.visible !== false,
+      credits:
+        typeof current.draft.credits === "number" && !Number.isNaN(current.draft.credits)
+          ? current.draft.credits
+          : undefined,
+    };
+
+    try {
+      const updated = await updateCourseSetting(current.id, normalizedDraft);
+      setCourseSettings((prev) => ({
+        ...prev,
+        [current.id]: {
+          ...(prev[current.id] ?? {}),
+          ...normalizedDraft,
+          ...updated,
+        },
+      }));
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("mc-course-settings-updated", { detail: { id: current.id } })
+        );
+      }
+      setSettingsModal(null);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to save settings.";
+      setSettingsModal((prev) =>
+        prev
+          ? {
+              ...prev,
+              saving: false,
+              error: message,
+            }
+          : prev
+      );
+    }
+  }, [settingsModal]);
 
   useEffect(() => {
     if (accounts.length === 0) {
@@ -121,8 +255,88 @@ export default function Home() {
     };
   }, [accounts]);
 
-  const mergedDashboardCards = dashboardCards.flatMap(({ account, cards }) =>
-    cards.map((card) => ({ ...card, account }))
+  useEffect(() => {
+    if (dashboardCards.length === 0) {
+      setCourseSettings({});
+      return;
+    }
+    let cancelled = false;
+
+    const syncCourseSettings = async () => {
+      try {
+        const existing = await getCourseSettings();
+        if (cancelled) return;
+
+        const existingMap = new Map(existing.map((s) => [s.id, s]));
+        const ensureMap = new Map(existing.map((s) => [s.id, s]));
+        dashboardCards.forEach(({ account, cards }) => {
+          (Array.isArray(cards) ? cards : []).forEach((card) => {
+            const id = getCourseSettingId(account.domain, card.id);
+            const current = ensureMap.get(id) || existingMap.get(id);
+            const courseName =
+              current?.courseName ||
+              card.longName ||
+              card.shortName ||
+              card.originalName ||
+              `Course ${card.id}`;
+            const merged: CourseSetting = {
+              id,
+              accountDomain: account.domain,
+              courseId: Number(card.id),
+              courseName,
+              courseCode: current?.courseCode || card.shortName || card.originalName,
+              nickname: current?.nickname ?? "",
+              order: current?.order,
+              visible: current?.visible !== false,
+              credits: current?.credits,
+            };
+            ensureMap.set(id, merged);
+          });
+        });
+
+        const ensure = Array.from(ensureMap.values());
+        const final = await upsertCourseSettings(ensure);
+        if (cancelled) return;
+
+        const mergedMap: Record<string, CourseSetting> = {};
+        ensure.forEach((setting) => {
+          mergedMap[setting.id] = setting;
+        });
+        final.forEach((setting) => {
+          mergedMap[setting.id] = {
+            ...mergedMap[setting.id],
+            ...setting,
+          };
+        });
+        setCourseSettings(mergedMap);
+      } catch {
+        // ignore sync errors; UI will fall back to defaults
+      }
+    };
+
+    syncCourseSettings();
+    return () => {
+      cancelled = true;
+    };
+  }, [dashboardCards]);
+
+  const mergedDashboardCards = useMemo(
+    () =>
+      dashboardCards.flatMap(({ account, cards }) => {
+        const list = Array.isArray(cards) ? cards : [];
+        return list
+          .map((card) => {
+            const cardWithAccount = { ...card, account };
+            const id = getCourseSettingId(account.domain, card.id);
+            const setting = courseSettings[id];
+            return {
+              card: cardWithAccount,
+              setting,
+            };
+          })
+          .filter(({ setting }) => (setting?.visible ?? true));
+      }),
+    [dashboardCards, courseSettings]
   );
 
   const assignmentItems = plannerItems.filter(
@@ -138,6 +352,23 @@ export default function Home() {
   const otherPlannerItems = plannerItems.filter(
     (p) => p.plannable_type !== "assignment" && !announcementItems.includes(p)
   );
+
+  const modalDisplay = settingsModal
+    ? getCourseDisplay({
+        actualName:
+          settingsModal.card.originalName ||
+          settingsModal.card.longName ||
+          settingsModal.card.shortName ||
+          settingsModal.draft.courseName,
+        nickname: settingsModal.draft.nickname,
+        fallback:
+          settingsModal.card.longName ||
+          settingsModal.card.shortName ||
+          settingsModal.card.originalName ||
+          settingsModal.draft.courseName ||
+          `Course ${settingsModal.card.id}`,
+      })
+    : null;
 
   useEffect(() => {
     const saved = localStorage.getItem("accounts");
@@ -155,6 +386,136 @@ export default function Home() {
       width: '100%',
       maxWidth: '100%'
     }}>
+      {settingsModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={handleCloseCourseSettings}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(15, 23, 42, 0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "1.5rem",
+            zIndex: 1000,
+          }}
+        >
+          <div
+            className="modern-card"
+            onClick={(event) => event.stopPropagation()}
+            style={{
+              width: "min(520px, 100%)",
+              padding: "1.5rem",
+              maxHeight: "90vh",
+              overflowY: "auto",
+              position: "relative",
+            }}
+          >
+            <button
+              type="button"
+              onClick={handleCloseCourseSettings}
+              style={{
+                position: "absolute",
+                top: "1rem",
+                right: "1rem",
+                background: "transparent",
+                border: "none",
+                color: "var(--text-muted)",
+                fontSize: "1.5rem",
+                cursor: "pointer",
+              }}
+              aria-label="Close course settings"
+            >
+              x
+            </button>
+
+            <Heading level="h4" margin="0 0 x-small" style={{ color: "var(--foreground)" }}>
+              {modalDisplay?.displayName ??
+                settingsModal.card.longName ??
+                settingsModal.card.shortName ??
+                settingsModal.card.originalName}
+            </Heading>
+            {modalDisplay?.subtitle && (
+              <Text size="small" color="secondary" as="p" style={{ margin: "0 0 0.75rem" }}>
+                {modalDisplay.subtitle}
+              </Text>
+            )}
+            <Text
+              size="small"
+              color="secondary"
+              as="p"
+              style={{ margin: "0 0 1rem" }}
+            >
+              {settingsModal.account.domain} - Course ID {settingsModal.courseId}
+            </Text>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <TextInput
+                renderLabel="Course display name"
+                value={settingsModal.draft.courseName || ""}
+                onChange={(_, value) => handleDraftChange({ courseName: value })}
+              />
+              <TextInput
+                renderLabel="Nickname"
+                value={settingsModal.draft.nickname || ""}
+                onChange={(_, value) => handleDraftChange({ nickname: value })}
+                placeholder="Shown on cards when present"
+              />
+              <TextInput
+                renderLabel="Course code"
+                value={settingsModal.draft.courseCode || ""}
+                onChange={(_, value) => handleDraftChange({ courseCode: value })}
+              />
+              <NumberInput
+                renderLabel="Credits"
+                value={
+                  typeof settingsModal.draft.credits === "number"
+                    ? settingsModal.draft.credits
+                    : ""
+                }
+                onChange={(_, value) =>
+                  handleDraftChange({
+                    credits: value === "" || Number.isNaN(Number(value)) ? undefined : Number(value),
+                  })
+                }
+                min={0}
+              />
+              <Checkbox
+                label="Show on dashboard"
+                checked={settingsModal.draft.visible !== false}
+                onChange={() =>
+                  handleDraftChange({ visible: !(settingsModal.draft.visible !== false) })
+                }
+              />
+            </div>
+
+            {settingsModal.error && (
+              <Text color="danger" size="small" as="p" style={{ marginTop: "1rem" }}>
+                {settingsModal.error}
+              </Text>
+            )}
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: "0.75rem",
+                marginTop: "1.5rem",
+              }}
+            >
+              <Button onClick={handleCloseCourseSettings} disabled={settingsModal.saving}>
+                Cancel
+              </Button>
+              <Button onClick={handleSaveCourseSettings} disabled={settingsModal.saving}>
+                {settingsModal.saving ? "Saving..." : "Save settings"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Dashboard Header */}
       <div style={{
         marginBottom: '2rem',
@@ -333,13 +694,17 @@ export default function Home() {
                   gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))',
                   gap: '1.5rem'
                 }}>
-                  {mergedDashboardCards.map((card, index) => (
+                  {mergedDashboardCards.map(({ card, setting }, index) => (
                     <div
                       key={`${card.id}-${card.account.id}`}
                       className="fade-in"
                       style={{ animationDelay: `${index * 0.1}s` }}
                     >
-                      <DashboardCardComponent card={card} />
+                      <DashboardCardComponent
+                        card={card}
+                        setting={setting}
+                        onOpenSettings={handleOpenCourseSettings}
+                      />
                     </div>
                   ))}
                 </div>

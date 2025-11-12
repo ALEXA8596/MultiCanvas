@@ -7,6 +7,9 @@ import { Text } from "@instructure/ui-text";
 import { Link } from "@instructure/ui-link";
 import "../app/stylesheets/todo-sidebar.css";
 import { SubmissionStatus } from "./canvasApi";
+import { useCourseSettingsMap } from "@/hooks/useCourseSettingsMap";
+import { getCourseSettingId } from "@/lib/db";
+import { getCourseDisplay } from "@/lib/courseDisplay";
 
 export interface PlannerLike {
   // Some planner items (e.g., user / global items) may have a null course_id
@@ -147,6 +150,37 @@ export default function TodoSidebar({
   const [isViewCollapsed, setIsViewCollapsed] = useState(false);
   const [intervalStart, setIntervalStart] = useState<Date>(() => getMondayOfWeek(new Date()));
   const tabRefs = useRef<HTMLButtonElement[]>([]);
+  const courseSettingsMap = useCourseSettingsMap();
+
+  const resolveCourseDisplay = useCallback(
+    (
+      accountDomain?: string,
+      courseId?: number | string | null,
+      contextName?: string | null
+    ) => {
+      const trimmedDomain = accountDomain?.trim();
+      const normalizedCourseId =
+        typeof courseId === "number" || typeof courseId === "string"
+          ? courseId
+          : undefined;
+      const settingId =
+        trimmedDomain && normalizedCourseId != null
+          ? getCourseSettingId(trimmedDomain, normalizedCourseId)
+          : undefined;
+      const setting = settingId ? courseSettingsMap[settingId] : undefined;
+      const context = contextName?.trim() ?? "";
+      const settingName = setting?.courseName?.trim() ?? "";
+      const actualName = context || settingName || undefined;
+      const fallback = context || settingName || "Unknown Class";
+
+      return getCourseDisplay({
+        actualName,
+        nickname: setting?.nickname,
+        fallback,
+      });
+    },
+    [courseSettingsMap]
+  );
 
   const goToPreviousWeek = useCallback(() => {
     setIntervalStart(prev => {
@@ -379,54 +413,75 @@ export default function TodoSidebar({
 
   const groupedAll = useMemo(() => {
     const combined = [
-      ...assignmentList.map((a) => ({
-        kind: "assignment",
-        key: `a-${a.plannable_id}-${a.account.id}`,
-        title: a.plannable?.title || a.plannable?.name || "Assignment",
-        date: a.plannable?.due_at || a.plannable?.todo_date,
-        domain: a.account.domain,
-        className: a.context_name || "Unknown Class",
-        canvasUrl: `https://${a.account.domain}/${a.html_url}`,
-  appUrl: `/${a.account.domain}/${a.course_id}/assignments/${a.plannable_id}`,
-  course_id: a.course_id,
-  plannable_id: a.plannable_id,
-      })),
-      ...completedList.map((a) => ({
-        kind: "completed",
-        key: `c-${a.plannable_id}-${a.account.id}`,
-        title: a.plannable?.title || a.plannable?.name || "Assignment",
-        date: a.plannable?.due_at || a.plannable?.todo_date,
-        domain: a.account.domain,
-        className: a.context_name || "Unknown Class",
-        canvasUrl: `https://${a.account.domain}/${a.html_url}`,
-  appUrl: `/${a.account.domain}/${a.course_id}/assignments/${a.plannable_id}`,
-  course_id: a.course_id,
-  plannable_id: a.plannable_id,
-      })),
-      ...announcementList.map((a) => ({
-        kind: "announcement",
-        key: `an-${a.plannable_id}-${a.account.id}`,
-        title: a.plannable?.title || a.plannable?.message || "Announcement",
-        date: a.plannable?.posted_at || a.plannable?.todo_date,
-        domain: a.account.domain,
-        className: a.context_name || "Unknown Class",
-        canvasUrl: `https://${a.account.domain}/${a.html_url}`,
-  appUrl: `/${a.account.domain}/${a.course_id}/assignments/${a.plannable_id}`,
-  course_id: a.course_id,
-  plannable_id: a.plannable_id,
-      })),
-      ...missingList.map((m, idx) => ({
-        kind: "missing",
-        key: `m-${idx}`,
-        title: m.assignment?.name || m.title || "Missing submission",
-        date: undefined,
-        domain: m.account?.domain || "unknown",
-        className: (m as any)?.context_name || "Unknown Class",
-        canvasUrl: m.html_url ? m.html_url : undefined,
-  appUrl: `/${m.account.domain}/${m.course_id}/assignments/${m.plannable_id}`,
-  course_id: m.course_id,
-  plannable_id: m.plannable_id,
-      })),
+      ...assignmentList.map((a) => {
+        const domain = a.account?.domain || "unknown";
+        return {
+          kind: "assignment" as const,
+          key: `a-${a.plannable_id}-${a.account.id}`,
+          title: a.plannable?.title || a.plannable?.name || "Assignment",
+          date: a.plannable?.due_at || a.plannable?.todo_date,
+          domain,
+          courseDisplay: resolveCourseDisplay(domain, a.course_id, a.context_name),
+          canvasUrl: a.html_url ? `https://${domain}/${a.html_url}` : undefined,
+          appUrl: domain !== "unknown"
+            ? `/${domain}/${a.course_id}/assignments/${a.plannable_id}`
+            : undefined,
+          course_id: a.course_id,
+          plannable_id: a.plannable_id,
+        };
+      }),
+      ...completedList.map((a) => {
+        const domain = a.account?.domain || "unknown";
+        return {
+          kind: "completed" as const,
+          key: `c-${a.plannable_id}-${a.account.id}`,
+          title: a.plannable?.title || a.plannable?.name || "Assignment",
+          date: a.plannable?.due_at || a.plannable?.todo_date,
+          domain,
+          courseDisplay: resolveCourseDisplay(domain, a.course_id, a.context_name),
+          canvasUrl: a.html_url ? `https://${domain}/${a.html_url}` : undefined,
+          appUrl: domain !== "unknown"
+            ? `/${domain}/${a.course_id}/assignments/${a.plannable_id}`
+            : undefined,
+          course_id: a.course_id,
+          plannable_id: a.plannable_id,
+        };
+      }),
+      ...announcementList.map((a) => {
+        const domain = a.account?.domain || "unknown";
+        return {
+          kind: "announcement" as const,
+          key: `an-${a.plannable_id}-${a.account.id}`,
+          title: a.plannable?.title || a.plannable?.message || "Announcement",
+          date: a.plannable?.posted_at || a.plannable?.todo_date,
+          domain,
+          courseDisplay: resolveCourseDisplay(domain, a.course_id, a.context_name),
+          canvasUrl: a.html_url ? `https://${domain}/${a.html_url}` : undefined,
+          appUrl: domain !== "unknown"
+            ? `/${domain}/${a.course_id}/assignments/${a.plannable_id}`
+            : undefined,
+          course_id: a.course_id,
+          plannable_id: a.plannable_id,
+        };
+      }),
+      ...missingList.map((m, idx) => {
+        const domain = m.account?.domain || "unknown";
+        return {
+          kind: "missing" as const,
+          key: `m-${idx}`,
+          title: m.assignment?.name || m.title || "Missing submission",
+          date: undefined,
+          domain,
+          courseDisplay: resolveCourseDisplay(domain, m.course_id, (m as any)?.context_name),
+          canvasUrl: m.html_url ? m.html_url : undefined,
+          appUrl:
+            domain !== "unknown" && m.course_id != null && m.plannable_id != null
+              ? `/${domain}/${m.course_id}/assignments/${m.plannable_id}`
+              : undefined,
+          course_id: m.course_id,
+          plannable_id: m.plannable_id,
+        };
+      }),
     ].sort(
       (a, b) =>
         (a.date ? new Date(a.date).getTime() : Infinity) -
@@ -459,7 +514,7 @@ export default function TodoSidebar({
             );
     });
     return grouped;
-  }, [assignmentList, completedList, announcementList, missingList]);
+  }, [assignmentList, completedList, announcementList, missingList, resolveCourseDisplay]);
 
   const allCount = useMemo(
     () => groupedAll.reduce((acc, g) => acc + g.items.length, 0),
@@ -526,8 +581,13 @@ export default function TodoSidebar({
                   {it.kind === "completed" && "📚 "}
                   {it.kind === "announcement" && "📢 "}
                   {it.kind === "missing" && "⚠️ "}
-                  {it.className} • {it.domain}
+                  {it.courseDisplay.displayName} • {it.domain}
                 </Text>
+                {it.courseDisplay.subtitle && (
+                  <Text as="p" size="x-small" color="secondary">
+                    {it.courseDisplay.subtitle}
+                  </Text>
+                )}
                 {it.date && (
                   <Text as="p" size="x-small" color="secondary">
                     {it.kind === "announcement" ? "Posted" : "Due"}: {formatDate(it.date)} (
@@ -545,10 +605,10 @@ export default function TodoSidebar({
                   </Text>
                 )}
                 <Text as="p" size="x-small">
-                  <Link href={it.canvasUrl ? it.canvasUrl : ""}>Canvas</Link>
+                  <Link href={it.canvasUrl ?? ""}>Canvas</Link>
                 </Text>
                 <Text as="p" size="x-small">
-                  <Link href={`/${it.domain}/${it.course_id}/assignments/${it.plannable_id}`}>
+                  <Link href={it.appUrl ?? `/${it.domain}/${it.course_id}/assignments/${it.plannable_id}`}>
                     App
                   </Link>
                 </Text>
@@ -567,42 +627,54 @@ export default function TodoSidebar({
           No assignments.
         </Text>
       )}
-      {assignmentList.map((it) => (
-        <View
-          as="li"
-          key={`a-${it.plannable_id}-${it.account.id}`}
-          margin="0 0 x-small"
-          padding="x-small small"
-          borderWidth="small"
-          borderRadius="small"
-          className="todo-item todo-kind-assignment"
-        >
-          <Text as="p" weight="bold" size="small">
-            {it.plannable?.title || it.plannable?.name || "Assignment"}
-          </Text>
-          <Text as="p" size="x-small" color="secondary">
-            📚 {it.context_name || "Unknown Class"} • {it.account.domain}
-          </Text>
-          {it.plannable?.due_at && (
-            <Text as="p" size="x-small" color="secondary">
-              Due: {formatDate(it.plannable.due_at)} (
-              {relativeTime(it.plannable.due_at)})
+      {assignmentList.map((it) => {
+        const display = resolveCourseDisplay(
+          it.account?.domain,
+          it.course_id,
+          it.context_name
+        );
+        return (
+          <View
+            as="li"
+            key={`a-${it.plannable_id}-${it.account.id}`}
+            margin="0 0 x-small"
+            padding="x-small small"
+            borderWidth="small"
+            borderRadius="small"
+            className="todo-item todo-kind-assignment"
+          >
+            <Text as="p" weight="bold" size="small">
+              {it.plannable?.title || it.plannable?.name || "Assignment"}
             </Text>
-          )}
-          <Text as="p" size="x-small">
-            <Link href={`https://${it.account.domain}/${it.html_url}`}>
-              Canvas
-            </Link>
-          </Text>
-          <Text as="p" size="x-small">
-            <Link href={`/${it.account.domain}/${it.course_id}/assignments/${it.plannable_id}`}>
-              App
-            </Link>
-          </Text>
-        </View>
-      ))}
+            <Text as="p" size="x-small" color="secondary">
+              📚 {display.displayName} • {it.account.domain}
+            </Text>
+            {display.subtitle && (
+              <Text as="p" size="x-small" color="secondary">
+                {display.subtitle}
+              </Text>
+            )}
+            {it.plannable?.due_at && (
+              <Text as="p" size="x-small" color="secondary">
+                Due: {formatDate(it.plannable.due_at)} (
+                {relativeTime(it.plannable.due_at)})
+              </Text>
+            )}
+            <Text as="p" size="x-small">
+              <Link href={`https://${it.account.domain}/${it.html_url}`}>
+                Canvas
+              </Link>
+            </Text>
+            <Text as="p" size="x-small">
+              <Link href={`/${it.account.domain}/${it.course_id}/assignments/${it.plannable_id}`}>
+                App
+              </Link>
+            </Text>
+          </View>
+        );
+      })}
     </View>
-  ), [assignmentList]);
+  ), [assignmentList, resolveCourseDisplay]);
 
   const renderAnnouncementsSection = useMemo(() => (
     <View as="ul" margin="0" padding="0">
@@ -611,42 +683,54 @@ export default function TodoSidebar({
           No announcements.
         </Text>
       )}
-      {announcementList.map((it) => (
-        <View
-          as="li"
-          key={`an-${it.plannable_id}-${it.account.id}`}
-          margin="0 0 x-small"
-          padding="x-small small"
-          borderWidth="small"
-          borderRadius="small"
-          className="todo-item todo-kind-announcement"
-        >
-          <Text as="p" weight="bold" size="small">
-            {it.plannable?.title || it.plannable?.message || "Announcement"}
-          </Text>
-          <Text as="p" size="x-small" color="secondary">
-            📢 {it.context_name || "Unknown Class"} • {it.account.domain}
-          </Text>
-          {it.plannable?.posted_at && (
-            <Text as="p" size="x-small" color="secondary">
-              Posted: {formatDate(it.plannable.posted_at)} (
-              {relativeTime(it.plannable.posted_at)})
+      {announcementList.map((it) => {
+        const display = resolveCourseDisplay(
+          it.account?.domain,
+          it.course_id,
+          it.context_name
+        );
+        return (
+          <View
+            as="li"
+            key={`an-${it.plannable_id}-${it.account.id}`}
+            margin="0 0 x-small"
+            padding="x-small small"
+            borderWidth="small"
+            borderRadius="small"
+            className="todo-item todo-kind-announcement"
+          >
+            <Text as="p" weight="bold" size="small">
+              {it.plannable?.title || it.plannable?.message || "Announcement"}
             </Text>
-          )}
-          <Text as="p" size="x-small">
-            <Link href={`https://${it.account.domain}/${it.html_url}`}>
-              Canvas
-            </Link>
-          </Text>
-          <Text as="p" size="x-small">
-            <Link href={`/${it.account.domain}/${it.course_id}/announcements/${it.plannable_id}`}>
-              App
-            </Link>
-          </Text>
-        </View>
-      ))}
+            <Text as="p" size="x-small" color="secondary">
+              📢 {display.displayName} • {it.account.domain}
+            </Text>
+            {display.subtitle && (
+              <Text as="p" size="x-small" color="secondary">
+                {display.subtitle}
+              </Text>
+            )}
+            {it.plannable?.posted_at && (
+              <Text as="p" size="x-small" color="secondary">
+                Posted: {formatDate(it.plannable.posted_at)} (
+                {relativeTime(it.plannable.posted_at)})
+              </Text>
+            )}
+            <Text as="p" size="x-small">
+              <Link href={`https://${it.account.domain}/${it.html_url}`}>
+                Canvas
+              </Link>
+            </Text>
+            <Text as="p" size="x-small">
+              <Link href={`/${it.account.domain}/${it.course_id}/announcements/${it.plannable_id}`}>
+                App
+              </Link>
+            </Text>
+          </View>
+        );
+      })}
     </View>
-  ), [announcementList]);
+  ), [announcementList, resolveCourseDisplay]);
 
   const renderMissingSection = useMemo(() => (
     <View as="ul" margin="0" padding="0">
@@ -655,33 +739,45 @@ export default function TodoSidebar({
           No missing.
         </Text>
       )}
-      {missingList.map((m, idx) => (
-        <View
-          as="li"
-          key={idx}
-          margin="0 0 x-small"
-          padding="x-small small"
-          borderWidth="small"
-          borderRadius="small"
-          className="todo-item todo-kind-missing"
-        >
-          <Text as="p" weight="bold" size="small">
-            {m.assignment
-              ? m.assignment.name
-              : m.title || "Missing submission"}
-          </Text>
-          <Text as="p" size="x-small" color="secondary">
-            ⚠️ Missing • {m.account?.domain || "unknown"}
-          </Text>
-          {m.html_url && (
-            <Text as="p" size="x-small">
-              <Link href={"https://" + m.account.domain + "/" + m.html_url}>Open</Link>
+      {missingList.map((m, idx) => {
+        const display = resolveCourseDisplay(
+          m.account?.domain,
+          m.course_id,
+          (m as any)?.context_name
+        );
+        return (
+          <View
+            as="li"
+            key={idx}
+            margin="0 0 x-small"
+            padding="x-small small"
+            borderWidth="small"
+            borderRadius="small"
+            className="todo-item todo-kind-missing"
+          >
+            <Text as="p" weight="bold" size="small">
+              {m.assignment
+                ? m.assignment.name
+                : m.title || "Missing submission"}
             </Text>
-          )}
-        </View>
-      ))}
+            <Text as="p" size="x-small" color="secondary">
+              ⚠️ Missing • {display.displayName} • {m.account?.domain || "unknown"}
+            </Text>
+            {display.subtitle && (
+              <Text as="p" size="x-small" color="secondary">
+                {display.subtitle}
+              </Text>
+            )}
+            {m.html_url && m.account?.domain && (
+              <Text as="p" size="x-small">
+                <Link href={`https://${m.account.domain}/${m.html_url}`}>Open</Link>
+              </Text>
+            )}
+          </View>
+        );
+      })}
     </View>
-  ), [missingList]);
+  ), [missingList, resolveCourseDisplay]);
 
   const renderCompletedSection = useMemo(() => (
     <View as="ul" margin="0" padding="0">
@@ -690,45 +786,57 @@ export default function TodoSidebar({
           No completed assignments.
         </Text>
       )}
-      {completedList.map((it) => (
-        <View
-          as="li"
-          key={`comp-${it.plannable_id}-${it.account.id}`}
-          margin="0 0 x-small"
-          padding="x-small small"
-          borderWidth="small"
-          borderRadius="small"
-          className="todo-item todo-kind-completed"
-        >
-          <Text as="p" weight="bold" size="small">
-            {it.plannable?.title || it.plannable?.name || "Assignment"} ✅
-          </Text>
-          <Text as="p" size="x-small" color="secondary">
-            📚 {it.context_name || "Unknown Class"} • {it.account.domain}
-          </Text>
-          {it.plannable?.due_at && (
-            <Text as="p" size="x-small" color="secondary">
-              Due: {formatDate(it.plannable.due_at)} (
-              {relativeTime(it.plannable.due_at)})
+      {completedList.map((it) => {
+        const display = resolveCourseDisplay(
+          it.account?.domain,
+          it.course_id,
+          it.context_name
+        );
+        return (
+          <View
+            as="li"
+            key={`comp-${it.plannable_id}-${it.account.id}`}
+            margin="0 0 x-small"
+            padding="x-small small"
+            borderWidth="small"
+            borderRadius="small"
+            className="todo-item todo-kind-completed"
+          >
+            <Text as="p" weight="bold" size="small">
+              {it.plannable?.title || it.plannable?.name || "Assignment"} ✅
             </Text>
-          )}
-          <Text as="p" size="x-small" color="success">
-            Submitted ✓
-          </Text>
-          <Text as="p" size="x-small">
-            <Link href={`https://${it.account.domain}/${it.html_url}`}>
-              Canvas
-            </Link>
-          </Text>
-          <Text as="p" size="x-small">
-            <Link href={`/${it.account.domain}/${it.course_id}/assignments/${it.plannable_id}`}>
-              App
-            </Link>
-          </Text>
-        </View>
-      ))}
+            <Text as="p" size="x-small" color="secondary">
+              📚 {display.displayName} • {it.account.domain}
+            </Text>
+            {display.subtitle && (
+              <Text as="p" size="x-small" color="secondary">
+                {display.subtitle}
+              </Text>
+            )}
+            {it.plannable?.due_at && (
+              <Text as="p" size="x-small" color="secondary">
+                Due: {formatDate(it.plannable.due_at)} (
+                {relativeTime(it.plannable.due_at)})
+              </Text>
+            )}
+            <Text as="p" size="x-small" color="success">
+              Submitted ✓
+            </Text>
+            <Text as="p" size="x-small">
+              <Link href={`https://${it.account.domain}/${it.html_url}`}>
+                Canvas
+              </Link>
+            </Text>
+            <Text as="p" size="x-small">
+              <Link href={`/${it.account.domain}/${it.course_id}/assignments/${it.plannable_id}`}>
+                App
+              </Link>
+            </Text>
+          </View>
+        );
+      })}
     </View>
-  ), [completedList]);
+  ), [completedList, resolveCourseDisplay]);
 
   const sections = useMemo(
     () => ({

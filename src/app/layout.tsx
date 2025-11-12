@@ -12,11 +12,10 @@ import { Text } from "@instructure/ui-text";
 import { Link } from "@instructure/ui-link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import {
-  fetchAllCourses,
-  CanvasCourse,
-  Account,
-} from "../components/canvasApi";
+import { fetchAllCourses, CanvasCourse, Account } from "@/components/canvasApi";
+import { getCourseSettingId } from "@/lib/db";
+import { getCourseDisplay } from "@/lib/courseDisplay";
+import { useCourseSettingsMap } from "@/hooks/useCourseSettingsMap";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faUser,
@@ -66,6 +65,7 @@ export default function RootLayout({
   const [courses, setCourses] = useState<
     Array<{ account: Account; course: CanvasCourse }>
   >([]);
+  const courseSettings = useCourseSettingsMap();
 
   useEffect(() => {
     // load saved accounts and fetch courses
@@ -294,40 +294,58 @@ export default function RootLayout({
                                                         </Text>
                                                       </li>
                                                     )}
-                                                    {courses.map(
-                                                      ({ account, course }) => (
+                                                    {courses.map(({ account, course }) => {
+                                                      const setting = courseSettings[
+                                                        getCourseSettingId(account.domain, course.id)
+                                                      ];
+                                                      const { displayName, subtitle } = getCourseDisplay({
+                                                        actualName: course.name,
+                                                        nickname: setting?.nickname,
+                                                        fallback: course.name,
+                                                      });
+                                                      return (
                                                         <li
                                                           key={`${account.domain}-${course.id}`}
                                                           style={{
-                                                            padding:
-                                                              "0.25rem 0",
-                                                            borderBottom:
-                                                              "1px solid rgba(0,0,0,0.04)",
+                                                            padding: "0.25rem 0",
+                                                            borderBottom: "1px solid rgba(0,0,0,0.04)",
                                                           }}
                                                         >
                                                           <Link
                                                             href={`/${account.domain}/${course.id}`}
                                                             isWithinText={false}
                                                             interaction="enabled"
-                                                            style={{ textDecoration: 'underline', color: 'var(--primary)', display: 'inline-block' }}
-                                                          >
-                                                            <div style={{ fontWeight: 600 }}>{course.name}</div>
-                                                          </Link>
-                                                          <div
                                                             style={{
-                                                              color:
-                                                                "var(--muted)",
-                                                              fontSize:
-                                                                "0.8rem",
+                                                              textDecoration: "underline",
+                                                              color: "var(--primary)",
+                                                              display: "inline-block",
                                                             }}
                                                           >
-                                                            {course.course_code ||
-                                                              course.friendly_name ||
-                                                              ""}
-                                                          </div>
+                                                            <div style={{ fontWeight: 600 }}>{displayName}</div>
+                                                          </Link>
+                                                          {subtitle && (
+                                                            <div
+                                                              style={{
+                                                                color: "var(--muted)",
+                                                                fontSize: "0.8rem",
+                                                              }}
+                                                            >
+                                                              {subtitle}
+                                                            </div>
+                                                          )}
+                                                          {(course.course_code || course.friendly_name) && (
+                                                            <div
+                                                              style={{
+                                                                color: "var(--muted)",
+                                                                fontSize: "0.7rem",
+                                                              }}
+                                                            >
+                                                              {course.course_code || course.friendly_name || ""}
+                                                            </div>
+                                                          )}
                                                         </li>
-                                                      )
-                                                    )}
+                                                      );
+                                                    })}
                                                   </ul>
                                                 </span>
                                               </div>

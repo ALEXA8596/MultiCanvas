@@ -6,7 +6,7 @@ import {
   fetchUserEnrollments,
   CanvasCourse,
   fetchAllCourses,
-} from "../../components/canvasApi";
+} from "@/components/canvasApi";
 import {
   Term,
   TermCourse,
@@ -18,7 +18,8 @@ import {
   addTermCourse,
   updateTermCourse,
   deleteTermCourse,
-} from "../../lib/db";
+  getCourseSettingId,
+} from "@/lib/db";
 import { View } from "@instructure/ui-view";
 import { Heading } from "@instructure/ui-heading";
 import { Text } from "@instructure/ui-text";
@@ -26,6 +27,8 @@ import { Link } from "@instructure/ui-link";
 import { Table } from "@instructure/ui-table";
 import { Button } from "@instructure/ui-buttons";
 import "./grades.css";
+import { getCourseDisplay } from "@/lib/courseDisplay";
+import { useCourseSettingsMap } from "@/hooks/useCourseSettingsMap";
 
 type CourseWithGrade = {
   course: CanvasCourse;
@@ -104,6 +107,7 @@ export default function GradesPage() {
   const [coursesWithGrades, setCoursesWithGrades] = useState<
     CourseWithGrade[]
   >([]);
+  const courseSettings = useCourseSettingsMap();
   const [terms, setTerms] = useState<Term[]>([]);
   const [termCourses, setTermCourses] = useState<TermCourse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -831,15 +835,28 @@ export default function GradesPage() {
             </Table.Row>
           </Table.Head>
           <Table.Body>
-            {coursesWithGrades.map(({ course, enrollment, account }) => (
-              <Table.Row key={`${account.id}-${course.id}`}>
-                <Table.Cell>
-                  <Link href={`/${account.domain}/${course.id}`}>
-                    {course.name}
-                  </Link>
-                  <br />
-                  <Text size="small" color="secondary">{account.domain}</Text>
-                </Table.Cell>
+            {coursesWithGrades.map(({ course, enrollment, account }) => {
+              const setting = courseSettings[getCourseSettingId(account.domain, course.id)];
+              const { displayName, subtitle } = getCourseDisplay({
+                actualName: course.name,
+                nickname: setting?.nickname,
+                fallback: course.name,
+              });
+              return (
+                <Table.Row key={`${account.id}-${course.id}`}>
+                  <Table.Cell>
+                    <Link href={`/${account.domain}/${course.id}`}>
+                      {displayName}
+                    </Link>
+                    {subtitle && (
+                      <>
+                        <br />
+                        <Text size="x-small" color="secondary">{subtitle}</Text>
+                      </>
+                    )}
+                    <br />
+                    <Text size="small" color="secondary">{account.domain}</Text>
+                  </Table.Cell>
                 <Table.Cell>{enrollment.grades.current_score ?? 'N/A'}</Table.Cell>
                 <Table.Cell>{enrollment.grades.current_grade ?? 'N/A'}</Table.Cell>
                 <Table.Cell>{enrollment.grades.final_score ?? 'N/A'}</Table.Cell>
@@ -854,8 +871,9 @@ export default function GradesPage() {
                     Sync
                   </Button>
                 </Table.Cell>
-              </Table.Row>
-            ))}
+                </Table.Row>
+              );
+            })}
           </Table.Body>
         </Table>
       )}

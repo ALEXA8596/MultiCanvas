@@ -10,7 +10,7 @@ import {
   fetchSelfSubmission,
   CanvasCourse,
   AssignmentGroup,
-} from "../../../../components/canvasApi";
+} from "@/components/canvasApi";
 import { View } from "@instructure/ui-view";
 import { Heading } from "@instructure/ui-heading";
 import { Text } from "@instructure/ui-text";
@@ -18,6 +18,9 @@ import { Table } from "@instructure/ui-table";
 import { NumberInput } from "@instructure/ui-number-input";
 import { Button } from "@instructure/ui-buttons";
 import { useParams } from "next/navigation";
+import { getCourseSettingId } from "@/lib/db";
+import { getCourseDisplay } from "@/lib/courseDisplay";
+import { useCourseSettingsMap } from "@/hooks/useCourseSettingsMap";
 
 type AssignmentWithSubmission = Assignment & { submission?: Submission | null };
 
@@ -35,6 +38,7 @@ export default function CourseGradesPage() {
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const courseSettings = useCourseSettingsMap();
 
   useEffect(() => {
     const savedAccounts = localStorage.getItem("accounts");
@@ -147,6 +151,16 @@ export default function CourseGradesPage() {
     }
   };
 
+  const courseDisplay =
+    account && course
+      ? getCourseDisplay({
+          actualName: course.name,
+          nickname:
+            courseSettings[getCourseSettingId(account.domain, course.id)]?.nickname,
+          fallback: course.name,
+        })
+      : null;
+
   if (loading) {
     return <Text>Loading course grades...</Text>;
   }
@@ -158,8 +172,13 @@ export default function CourseGradesPage() {
   return (
     <div className="course-grades-container fade-in">
       <Heading level="h2" margin="0 0 medium 0" className="text-gradient">
-        Grades for {course?.name}
+        Grades for {courseDisplay?.displayName ?? course?.name ?? "Course"}
       </Heading>
+      {courseDisplay?.subtitle && (
+        <Text size="small" color="secondary" style={{ marginTop: "-0.75rem", display: "block" }}>
+          {courseDisplay.subtitle}
+        </Text>
+      )}
 
       <Button onClick={applyWhatIfScores} color="primary" margin="0 0 medium 0">
         Apply What-If Scores

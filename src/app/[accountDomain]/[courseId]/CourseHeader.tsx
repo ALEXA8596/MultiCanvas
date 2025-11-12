@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { Heading } from "@instructure/ui-heading";
 import { Text } from "@instructure/ui-text";
-import { Account, CanvasCourse, fetchCourse } from "../../../components/canvasApi";
+import { Account, CanvasCourse, fetchCourse } from "@/components/canvasApi";
+import { CourseSetting, getCourseSetting, getCourseSettingId } from "@/lib/db";
 
 export default function CourseHeader() {
   const params = useParams();
@@ -14,6 +15,7 @@ export default function CourseHeader() {
   const [account, setAccount] = useState<Account | null>(null);
   const [course, setCourse] = useState<CanvasCourse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [courseSetting, setCourseSetting] = useState<CourseSetting | null>(null);
 
   useEffect(() => {
     try {
@@ -34,6 +36,35 @@ export default function CourseHeader() {
       .then(data => { if (!cancelled) setCourse(data); })
       .catch(e => !cancelled && setError((e as Error).message));
     return () => { cancelled = true; };
+  }, [account, courseId]);
+
+  useEffect(() => {
+    if (!account || isNaN(courseId) || typeof window === "undefined") return;
+    let cancelled = false;
+    const id = getCourseSettingId(account.domain, courseId);
+
+    const loadSetting = () => {
+      getCourseSetting(id)
+        .then((setting: CourseSetting | undefined) => {
+          if (!cancelled) setCourseSetting(setting || null);
+        })
+        .catch(() => {
+          if (!cancelled) setCourseSetting(null);
+        });
+    };
+
+    loadSetting();
+
+    const listener = (event: Event) => {
+      const detail = (event as CustomEvent<{ id?: string }>).detail;
+      if (detail?.id && detail.id !== id) return;
+      loadSetting();
+    };
+    window.addEventListener("mc-course-settings-updated", listener as EventListener);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("mc-course-settings-updated", listener as EventListener);
+    };
   }, [account, courseId]);
 
   if (error) {
@@ -90,16 +121,18 @@ export default function CourseHeader() {
         fontSize: '2rem',
         fontWeight: '700'
       }}>
-        {course.name}
+        {(courseSetting?.nickname && courseSetting.nickname.trim().length > 0
+          ? courseSetting.nickname.trim()
+          : courseSetting?.courseName || course?.name) || "Course"}
       </Heading>
       <div style={{
         display: 'flex',
         flexDirection: 'column',
         gap: '0.25rem'
       }}>
-        {course.course_code && (
+        {(courseSetting?.courseCode || course?.course_code) && (
           <Text size="large" style={{ color: 'rgba(255, 255, 255, 0.95)', fontWeight: '500' }}>
-            {course.course_code}
+            {courseSetting?.courseCode || course?.course_code}
           </Text>
         )}
         {account && (

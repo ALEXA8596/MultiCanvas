@@ -15,7 +15,10 @@ import {
   fetchAnnouncements,
   fetchDiscussionTopics,
   fetchCourseFiles,
-} from "../../components/canvasApi";
+} from "@/components/canvasApi";
+import { getCourseSettingId } from "@/lib/db";
+import { getCourseDisplay } from "@/lib/courseDisplay";
+import { useCourseSettingsMap } from "@/hooks/useCourseSettingsMap";
 
 type CourseWithAccount = { account: Account; course: CanvasCourse };
 
@@ -29,6 +32,7 @@ export default function DownloadExportPage() {
   const [exporting, setExporting] = useState(false);
   const [progress, setProgress] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+  const courseSettings = useCourseSettingsMap();
 
   useEffect(() => {
     const saved = localStorage.getItem("accounts");
@@ -46,7 +50,7 @@ export default function DownloadExportPage() {
           const cs = await fetchCourses(account).catch(() => [] as CanvasCourse[]);
           return cs.map(course => ({ account, course }));
         }));
-        const merged = lists.flat();
+  const merged = lists.flat();
         if (!cancelled) {
           setCourses(merged);
           const sel: Record<string, boolean> = {};
@@ -75,9 +79,16 @@ export default function DownloadExportPage() {
 
   async function exportCourse(zip: JSZip, item: CourseWithAccount) {
     const { account, course } = item;
+    const setting = courseSettings[getCourseSettingId(account.domain, course.id)];
+    const { displayName, subtitle } = getCourseDisplay({
+      actualName: course.name,
+      nickname: setting?.nickname,
+      fallback: course.name,
+    });
+    const progressName = subtitle ? `${displayName} (${subtitle})` : displayName;
     const safeName = (course.name || String(course.id)).replace(/[^a-z0-9\-_. ]/gi, "_");
     const basePath = `${account.domain}/courses/${course.id} - ${safeName}`;
-    setProgress(`Exporting ${account.domain} / ${course.name}…`);
+  setProgress(`Exporting ${account.domain} / ${progressName}...`);
 
     // Course core
     const courseJson = await fetchCourse(account, course.id).catch(() => course);
@@ -128,13 +139,13 @@ export default function DownloadExportPage() {
     if (selectedCourses.length === 0) return;
     setExporting(true);
     setError(null);
-    setProgress("Preparing zip…");
+  setProgress("Preparing zip...");
     try {
       const zip = new JSZip();
       for (const item of selectedCourses) {
         await exportCourse(zip, item);
       }
-      setProgress("Zipping…");
+  setProgress("Zipping...");
       const blob = await zip.generateAsync({ type: "blob" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -174,7 +185,7 @@ export default function DownloadExportPage() {
             <input type="number" min={0} value={delayMs} onChange={e => setDelayMs(Math.max(0, Number(e.target.value)||0))} style={{ width: 100 }} />
           </label>
           <button className="btn-primary" onClick={startExport} disabled={exporting || selectedCourses.length === 0}>
-            {exporting ? 'Exporting…' : `Export ${selectedCourses.length} course(s)`}
+            {exporting ? 'Exporting...' : `Export ${selectedCourses.length} course(s)`}
           </button>
         </div>
 
@@ -186,10 +197,21 @@ export default function DownloadExportPage() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '6px' }}>
                 {courses.filter(c => c.account.id === acc.id).map(({account, course}) => {
                   const key = `${account.domain}:${course.id}`;
+                  const setting = courseSettings[getCourseSettingId(account.domain, course.id)];
+                  const { displayName, subtitle } = getCourseDisplay({
+                    actualName: course.name,
+                    nickname: setting?.nickname,
+                    fallback: course.name,
+                  });
                   return (
                     <label key={key} style={{ display: 'flex', alignItems: 'center', gap: 8, border: '1px solid var(--border)', borderRadius: 8, padding: '6px 8px', background: 'var(--surface-elevated)' }}>
                       <input type="checkbox" checked={!!selected[key]} onChange={e => setSelected(s => ({ ...s, [key]: e.target.checked }))} />
-                      <span style={{ fontSize: '0.9rem' }}>{course.name} <span style={{ color: 'var(--foreground-muted)' }}>({course.id})</span></span>
+                      <span style={{ fontSize: '0.9rem', display: 'flex', flexDirection: 'column' }}>
+                        <span>{displayName}</span>
+                        <span style={{ color: 'var(--foreground-muted)', fontSize: '0.8rem' }}>
+                          {(subtitle ? `${subtitle} ` : '')}({course.id})
+                        </span>
+                      </span>
                     </label>
                   );
                 })}

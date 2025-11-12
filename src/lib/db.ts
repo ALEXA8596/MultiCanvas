@@ -2,6 +2,10 @@ import { openDB, DBSchema, IDBPDatabase } from 'idb';
 
 export interface CourseSetting {
   id: string; // Combination of accountId and courseId
+  accountDomain?: string;
+  courseId?: number;
+  courseName?: string;
+  courseCode?: string;
   nickname?: string;
   order?: number;
   visible?: boolean;
@@ -57,6 +61,18 @@ interface MyDB extends DBSchema {
 
 const isBrowser = typeof window !== 'undefined' && typeof indexedDB !== 'undefined';
 
+export function getCourseSettingId(accountDomain: string, courseId: number | string) {
+  return `${accountDomain}::${courseId}`;
+}
+
+export function parseCourseSettingId(id: string) {
+  const [accountDomain, courseId] = id.split('::');
+  return {
+    accountDomain,
+    courseId: courseId ? Number(courseId) : undefined,
+  };
+}
+
 const dbPromise: Promise<IDBPDatabase<MyDB>> | null = isBrowser
   ? openDB<MyDB>('multi-canvas-db', 2, {
       upgrade(db, oldVersion) {
@@ -108,6 +124,46 @@ export async function setCourseSetting(setting: CourseSetting) {
   await tx.store.put(setting);
   await tx.done;
   return getCourseSettings();
+}
+
+export async function upsertCourseSettings(settings: CourseSetting[]) {
+  if (settings.length === 0) return getCourseSettings();
+  const db = await requireDb();
+  const tx = db.transaction('course-settings', 'readwrite');
+  const store = tx.store;
+  for (const setting of settings) {
+    const existing = await store.get(setting.id);
+    if (!existing) {
+      await store.put(setting);
+      continue;
+    }
+    const merged: CourseSetting = {
+      ...existing,
+      ...setting,
+      id: setting.id,
+    };
+    const needsUpdate = JSON.stringify(existing) !== JSON.stringify(merged);
+    if (needsUpdate) {
+      await store.put(merged);
+    }
+  }
+  await tx.done;
+  return getCourseSettings();
+}
+
+export async function updateCourseSetting(id: string, patch: Partial<CourseSetting>) {
+  const db = await requireDb();
+  const tx = db.transaction('course-settings', 'readwrite');
+  const store = tx.store;
+  const current = await store.get(id);
+  const merged: CourseSetting = {
+    id,
+    ...current,
+    ...patch,
+  };
+  await store.put(merged);
+  await tx.done;
+  return merged;
 }
 
 // --- Manual Grades ---

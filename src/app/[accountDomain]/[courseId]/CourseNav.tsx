@@ -14,7 +14,8 @@ const PAGES = [
   { slug: "modules", label: "Modules" },
   { slug: "files", label: "Files" },
   { slug: "people", label: "People" },
-  { slug: "wiki", label: "Wiki" }
+  { slug: "wiki", label: "Wiki" },
+  { slug: "settings", label: "Settings" }
 ];
 
 export default function CourseNav({ accountDomain, courseId }: CourseNavProps) {

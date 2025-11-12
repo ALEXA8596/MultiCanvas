@@ -1,7 +1,7 @@
 "use client"
 import { useEffect, useState } from "react"
 import AccountForm from "../../components/AccountForm"
-import { fetchAllCourses, Account } from "../../components/canvasApi"
+import { fetchAllCourses, Account } from "@/components/canvasApi"
 import { View } from "@instructure/ui-view"
 import { Flex } from "@instructure/ui-flex"
 import { Heading } from "@instructure/ui-heading"
@@ -9,12 +9,16 @@ import { Text } from "@instructure/ui-text"
 import { Link } from "@instructure/ui-link"
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faUser, faBookOpen } from '@fortawesome/free-solid-svg-icons'
+import { getCourseSettingId } from "@/lib/db"
+import { getCourseDisplay } from "@/lib/courseDisplay"
+import { useCourseSettingsMap } from "@/hooks/useCourseSettingsMap"
 
 export default function Home() {
   const [accounts, setAccounts] = useState<Account[]>([])
   const [coursesData, setCoursesData] = useState<{ account: Account; courses: any[] }[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const courseSettings = useCourseSettingsMap()
 
   useEffect(() => {
     if (accounts.length === 0) {
@@ -185,32 +189,49 @@ export default function Home() {
                   </Heading>
                   {Array.isArray(courses) && courses.length > 0 ? (
                     <div style={{ paddingLeft: '1rem' }}>
-                      {courses.map((course: any, courseIndex) => (
-                        <div key={course.id} style={{
-                          padding: '0.75rem 0',
-                          borderBottom: courseIndex < courses.length - 1 ? '1px solid var(--border)' : 'none'
-                        }}>
-                          <Link 
-                            href={`/${account.domain}/${course.id}`}
-                            style={{
-                              textDecoration: 'none',
-                              color: 'var(--primary)',
-                              fontWeight: '500',
-                              transition: 'color var(--transition-fast)'
-                            }}
-                          >
-                            <Text size="small">{course.name}</Text>
-                          </Link>
-                          <br />
-                          {course.course_code && (
-                            <View margin="xxx-small 0 0">
-                              <Text size="x-small" style={{ color: 'var(--text-muted)' }}>
-                                {course.course_code}
-                              </Text>
-                            </View>
-                          )}
-                        </div>
-                      ))}
+                      {courses.map((course: any, courseIndex) => {
+                        const setting = courseSettings[
+                          getCourseSettingId(account.domain, course.id)
+                        ];
+                        const { displayName, subtitle } = getCourseDisplay({
+                          actualName: course.name,
+                          nickname: setting?.nickname,
+                          fallback: course.name,
+                        });
+                        return (
+                          <div key={course.id} style={{
+                            padding: '0.75rem 0',
+                            borderBottom: courseIndex < courses.length - 1 ? '1px solid var(--border)' : 'none'
+                          }}>
+                            <Link 
+                              href={`/${account.domain}/${course.id}`}
+                              style={{
+                                textDecoration: 'none',
+                                color: 'var(--primary)',
+                                fontWeight: '500',
+                                transition: 'color var(--transition-fast)'
+                              }}
+                            >
+                              <Text size="small">{displayName}</Text>
+                            </Link>
+                            <br />
+                            {subtitle && (
+                              <View margin="xxx-small 0 0">
+                                <Text size="x-small" style={{ color: 'var(--text-muted)' }}>
+                                  {subtitle}
+                                </Text>
+                              </View>
+                            )}
+                            {course.course_code && (
+                              <View margin="xxx-small 0 0">
+                                <Text size="x-small" style={{ color: 'var(--text-muted)' }}>
+                                  {course.course_code}
+                                </Text>
+                              </View>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   ) : (
                     <View margin="0 0 0 medium">
