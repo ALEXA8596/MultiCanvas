@@ -26,7 +26,8 @@ import {
   faListCheck,
   faInbox,
   faDownload,
-  faCog
+  faCog,
+  faGraduationCap
 } from "@fortawesome/free-solid-svg-icons";
 import { ThemeProvider } from "../components/ThemeProvider";
 import { ThemeToggle } from "../components/ThemeToggle";
@@ -46,6 +47,7 @@ const NAV_ITEMS = [
   { label: "Account", icon: faUser, href: "/accounts" },
   { label: "Dashboard", icon: faColumns, href: "/" },
   { label: "Courses", icon: faBookOpen, href: "/courses" },
+  { label: "Grades", icon: faGraduationCap, href: "/grades" },
   { label: "Calendar", icon: faCalendarDays, href: "/calendar" },
   { label: "Todo", icon: faListCheck, href: "/todo" },
   { label: "Inbox", icon: faInbox, href: "/inbox" },

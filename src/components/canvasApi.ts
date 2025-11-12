@@ -51,6 +51,66 @@ export type CanvasCourse = {
   restrict_enrollments_to_course_dates: boolean;
 };
 
+export type Grades = {
+  html_url: string;
+  current_score: number | null;
+  current_grade: string | null;
+  final_score: number | null;
+  final_grade: string | null;
+};
+
+export type Enrollment = {
+  id: number;
+  course_id: number;
+  sis_course_id: string | null;
+  course_integration_id: string | null;
+  course_section_id: number;
+  section_integration_id: string | null;
+  sis_account_id: string | null;
+  sis_section_id: string | null;
+  sis_user_id: string | null;
+  enrollment_state: string;
+  limit_privileges_to_course_section: boolean;
+  sis_import_id: number | null;
+  root_account_id: number;
+  type: string;
+  user_id: number;
+  associated_user_id: number | null;
+  role: string;
+  role_id: number;
+  created_at: string;
+  updated_at: string;
+  start_at: string | null;
+  end_at: string | null;
+  last_activity_at: string | null;
+  last_attended_at: string | null;
+  total_activity_time: number;
+  html_url: string;
+  grades: Grades;
+  user: {
+    id: number;
+    name: string;
+    sortable_name: string;
+    short_name: string;
+  };
+  override_grade: string | null;
+  override_score: number | null;
+  unposted_current_grade: string | null;
+  unposted_final_grade: string | null;
+  unposted_current_score: string | null;
+  unposted_final_score: string | null;
+  has_grading_periods: boolean | null;
+  totals_for_all_grading_periods_option: boolean | null;
+  current_grading_period_title: string | null;
+  current_grading_period_id: number | null;
+  current_period_override_grade: string | null;
+  current_period_override_score: number | null;
+  current_period_unposted_current_score: number | null;
+  current_period_unposted_final_score: number | null;
+  current_period_unposted_current_grade: string | null;
+  current_period_unposted_final_grade: string | null;
+};
+
 export async function fetchCourses(account: Account): Promise<CanvasCourse[]> {
   const res = await canvasFetch(account, `courses?enrollment_state=active`);
   if (!res.ok) throw new Error(`Failed for ${account.domain}`);
@@ -71,6 +131,12 @@ export async function fetchAllCourses(accounts: Account[]) {
       courses: await fetchCourses(account),
     }))
   );
+}
+
+export async function fetchUserEnrollments(account: Account): Promise<Enrollment[]> {
+  const res = await canvasFetch(account, `users/self/enrollments`);
+  if (!res.ok) throw new Error(`Failed for ${account.domain}`);
+  return res.json();
 }
 
 // https://xyz.instructure.com/api/v1/dashboard/dashboard_cards
@@ -340,6 +406,23 @@ export async function fetchAssignment(account: Account, courseId: number, assign
   const path = `courses/${courseId}/assignments/${assignmentId}`;
   const res = await canvasFetch(account, path);
   if (!res.ok) throw new Error(`Failed to fetch assignment ${assignmentId} for course ${courseId} (${account.domain})`);
+  return res.json();
+}
+
+export async function getWhatIfGrades(account: Account, courseId: number, assignmentId: number, score: number) {
+  const path = `courses/${courseId}/assignments/${assignmentId}/submissions/self`;
+  const res = await canvasFetch(account, path, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      submission: {
+        posted_grade: score
+      }
+    })
+  });
+  if (!res.ok) throw new Error(`Failed to fetch what-if grades for assignment ${assignmentId} (${account.domain})`);
   return res.json();
 }
 

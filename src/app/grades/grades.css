@@ -1,0 +1,146 @@
+.input-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.input-container input,
+.input-container select {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+    width: 10em;
+    box-sizing: border-box;
+}
+
+.manual-grade-form {
+    margin-bottom: 2rem;
+}
+
+.gpa-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.course-type-hint {
+    margin-bottom: 1rem;
+}
+
+.section-header,
+.term-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.section-actions,
+.term-actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.term-grade-inline {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.term-grade-inline label {
+    white-space: nowrap;
+}
+
+.term-grade-inline input {
+    height: 2.5rem;
+}
+
+.what-if-term-grades {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.table-input {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+    width: 10em;
+    box-sizing: border-box;
+}
+
+.form-row {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.form-column {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.button-row {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.custom-gpa-section {
+    margin-top: 2rem;
+}
+
+.custom-gpa-config {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 1.5rem;
+}
+
+.custom-gpa-card {
+    flex: 1 1 280px;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 1rem;
+    background-color: #fafafa;
+}
+
+.custom-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.custom-grid .input-container {
+    flex: 1 1 160px;
+}
+
+.custom-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 1rem;
+}
+
+.custom-gpa-section table input[type="checkbox"] {
+    width: auto;
+    height: auto;
+}
+
+.custom-extra-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
