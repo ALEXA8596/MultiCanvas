@@ -5,7 +5,6 @@ import { View } from "@instructure/ui-view";
 import { Heading } from "@instructure/ui-heading";
 import { Text } from "@instructure/ui-text";
 import { Link } from "@instructure/ui-link";
-import { Flex } from "@instructure/ui-flex";
 import CourseNav from "../../CourseNav";
 import CourseHeader from "../../CourseHeader";
 import { Account, Assignment, AssignmentOverride, fetchAssignment, fetchAssignmentOverrides, uploadAssignmentFile, submitAssignmentFiles, UploadedFile } from "../../../../../components/canvasApi";
@@ -155,7 +154,7 @@ export default function AssignmentDetailPage() {
                       setSubmitStatus(null);
                       try {
                         setSubmitStatus('Submitting...');
-                        const res = await submitAssignmentFiles(account, courseId, assignment.id, uploadedFiles.map(f => f.id));
+                        await submitAssignmentFiles(account, courseId, assignment.id, uploadedFiles.map(f => f.id));
                         setSubmitStatus('Submitted successfully at ' + new Date().toLocaleTimeString());
                       } catch (err: any) {
                         setSubmitStatus('Submission failed: ' + (err.message || 'Unknown error'));

@@ -727,7 +727,7 @@ export default function GradesPage() {
       const candidate = extraPerCredit * credits;
       if (candidate <= 0) return;
 
-      let availableTotal = totalCapValue - extraUsedTotal;
+  const availableTotal = totalCapValue - extraUsedTotal;
       if (availableTotal <= 0) return;
 
       let availableForGrade = Number.POSITIVE_INFINITY;

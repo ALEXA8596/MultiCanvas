@@ -69,7 +69,6 @@ export default function CalendarPage() {
 
   const grid = useMemo<DayCell[]>(() => {
     const start = startOfMonth(month);
-    const end = endOfMonth(month);
     // Find the Monday (or Sunday) start of calendar grid. We'll use Sunday as first day (0)
     const firstDay = new Date(start);
     const dow = firstDay.getDay(); // 0..6
@@ -183,6 +182,12 @@ export default function CalendarPage() {
           <Heading level="h3" style={{ margin: 0 }}>{monthLabel}</Heading>
           <div />
         </div>
+
+        {loading && !error && (
+          <Text size="small" color="secondary" as="p" style={{ marginBottom: '1rem' }}>
+            Loading events…
+          </Text>
+        )}
 
         {error && (
           <div style={{

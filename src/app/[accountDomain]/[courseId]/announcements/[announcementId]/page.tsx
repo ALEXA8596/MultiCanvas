@@ -31,7 +31,6 @@ const AnnouncementsPage = () => {
 
   useEffect(() => {
     if (!accountDomain || isNaN(courseId)) return;
-    const cancelled = false;
 
     // load account from localStorage
     try {
@@ -69,6 +68,7 @@ const AnnouncementsPage = () => {
   return (
     <div>
       <h1>Announcements</h1>
+      {error && <p style={{ color: "#dc2626" }}>{error}</p>}
       <ul>
         {announcements.map((announcement) => (
           <li key={announcement.id}>{announcement.title}</li>

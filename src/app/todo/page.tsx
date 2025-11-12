@@ -1,7 +1,5 @@
 "use client"
 import { useEffect, useState, useMemo, useCallback } from 'react'
-import { View } from '@instructure/ui-view'
-import { Flex } from '@instructure/ui-flex'
 import { Heading } from '@instructure/ui-heading'
 import { Text } from '@instructure/ui-text'
 import { Link } from '@instructure/ui-link'
@@ -361,7 +359,7 @@ export default function TodoPage() {
     }
   };
 
-  const { items: filteredItems, type: contentType } = getFilteredContent();
+  const { items: filteredItems } = getFilteredContent();
 
   const formatDate = (d?: string|null) => {
     if(!d) return null

@@ -55,29 +55,37 @@ export default function CourseGradesPage() {
 
   useEffect(() => {
     if (!account || !courseId) return;
+    const currentAccount = account;
+    const currentCourseId = Number(courseId);
 
     async function loadData() {
       setLoading(true);
       setError(null);
       try {
-        const courseData = await fetchCourse(account, Number(courseId));
+        const courseData = await fetchCourse(currentAccount, currentCourseId);
         setCourse(courseData);
 
-        const groups = await fetchAssignmentGroups(account, Number(courseId));
+        const groups = await fetchAssignmentGroups(currentAccount, currentCourseId);
         const assignmentsWithSubmissions = await Promise.all(
-          groups.map(async (group) => {
-            const assignments = await Promise.all(
-              (group.assignments || []).map(async (assignment) => {
-                const submission = await fetchSelfSubmission(
-                  account,
-                  Number(courseId),
-                  assignment.id
-                );
-                return { ...assignment, submission };
-              })
-            );
-            return { ...group, assignments };
-          })
+          groups.map(
+            async (
+              group
+            ): Promise<AssignmentGroup & { assignments: AssignmentWithSubmission[] }> => {
+              const assignments: AssignmentWithSubmission[] = await Promise.all(
+                (group.assignments || []).map(
+                  async (assignment): Promise<AssignmentWithSubmission> => {
+                    const submission = await fetchSelfSubmission(
+                      currentAccount,
+                      currentCourseId,
+                      assignment.id
+                    );
+                    return { ...assignment, submission };
+                  }
+                )
+              );
+              return { ...group, assignments };
+            }
+          )
         );
         setAssignmentGroups(assignmentsWithSubmissions);
       } catch (e: any) {
@@ -96,32 +104,40 @@ export default function CourseGradesPage() {
 
   const applyWhatIfScores = async () => {
     if (!account || !courseId) return;
+    const currentAccount = account;
+    const currentCourseId = Number(courseId);
     setLoading(true);
     try {
       for (const assignmentId in whatIfScores) {
         await getWhatIfGrades(
-          account,
-          Number(courseId),
+          currentAccount,
+          currentCourseId,
           Number(assignmentId),
           whatIfScores[assignmentId]
         );
       }
       // Refetch data to show updated grades
-      const groups = await fetchAssignmentGroups(account, Number(courseId));
+      const groups = await fetchAssignmentGroups(currentAccount, currentCourseId);
       const assignmentsWithSubmissions = await Promise.all(
-        groups.map(async (group) => {
-          const assignments = await Promise.all(
-            (group.assignments || []).map(async (assignment) => {
-              const submission = await fetchSelfSubmission(
-                account,
-                Number(courseId),
-                assignment.id
-              );
-              return { ...assignment, submission };
-            })
-          );
-          return { ...group, assignments };
-        })
+        groups.map(
+          async (
+            group
+          ): Promise<AssignmentGroup & { assignments: AssignmentWithSubmission[] }> => {
+            const assignments: AssignmentWithSubmission[] = await Promise.all(
+              (group.assignments || []).map(
+                async (assignment): Promise<AssignmentWithSubmission> => {
+                  const submission = await fetchSelfSubmission(
+                    currentAccount,
+                    currentCourseId,
+                    assignment.id
+                  );
+                  return { ...assignment, submission };
+                }
+              )
+            );
+            return { ...group, assignments };
+          }
+        )
       );
       setAssignmentGroups(assignmentsWithSubmissions);
     } catch (e: any) {
@@ -164,7 +180,7 @@ export default function CourseGradesPage() {
               </Table.Row>
             </Table.Head>
             <Table.Body>
-              {group.assignments.map((assignment) => (
+              {group.assignments.map((assignment: AssignmentWithSubmission) => (
                 <Table.Row key={assignment.id}>
                   <Table.Cell>{assignment.name}</Table.Cell>
                   <Table.Cell>

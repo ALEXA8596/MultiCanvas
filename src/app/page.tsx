@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import {
-  fetchAllCourses,
   Account,
   fetchDashboardCards,
   DashboardCard,
@@ -19,11 +18,8 @@ import { Pill } from "@instructure/ui-pill";
 import TodoSidebar from "../components/TodoSidebar";
 
 
-type CoursesResult = { account: Account; courses: any[] };
-
 export default function Home() {
   const [accounts, setAccounts] = useState<Account[]>([]);
-  const [coursesData, setCoursesData] = useState<CoursesResult[]>([]);
   const [dashboardCards, setDashboardCards] = useState<
     { account: Account; cards: DashboardCard[] }[]
   >([]);
@@ -36,7 +32,6 @@ export default function Home() {
 
   useEffect(() => {
     if (accounts.length === 0) {
-      setCoursesData([]);
       setDashboardCards([]);
       setPlannerItems([]);
       setMissingSubmissions([]);
@@ -46,13 +41,6 @@ export default function Home() {
     setLoading(true);
     setError(null);
 
-    fetchAllCourses(accounts)
-      .then((results: any) => {
-        if (!cancelled) setCoursesData(results);
-      })
-      .catch((e: any) => !cancelled && setError(e.message))
-      .finally(() => !cancelled && setLoading(false));
-
     Promise.all(
       accounts.map(async (account) => ({
         account,
@@ -60,7 +48,8 @@ export default function Home() {
       }))
     )
       .then((res) => !cancelled && setDashboardCards(res))
-      .catch((e) => !cancelled && setError(e.message));
+      .catch((e) => !cancelled && setError(e.message))
+      .finally(() => !cancelled && setLoading(false));
 
     return () => {
       cancelled = true;
@@ -150,12 +139,6 @@ export default function Home() {
     (p) => p.plannable_type !== "assignment" && !announcementItems.includes(p)
   );
 
-  const formatTodoDate = (dateStr?: string | null) => {
-    if (!dateStr) return null;
-    const d = new Date(dateStr);
-    return isNaN(d.getTime()) ? dateStr : d.toLocaleString();
-  };
-
   useEffect(() => {
     const saved = localStorage.getItem("accounts");
     if (saved) {
@@ -190,6 +173,21 @@ export default function Home() {
           Your Canvas courses and activities at a glance
         </Text>
       </div>
+
+      {error && (
+        <div
+          className="modern-card"
+          style={{
+            marginBottom: "1.5rem",
+            padding: "1rem",
+            background: "#fef2f2",
+            border: "1px solid #fecaca",
+            color: "#dc2626",
+          }}
+        >
+          <Text style={{ color: "#dc2626" }}>Error: {error}</Text>
+        </div>
+      )}
 
       {/* Dashboard Stats */}
       <div style={{

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { View } from "@instructure/ui-view";
 import { Heading } from "@instructure/ui-heading";
 import { Text } from "@instructure/ui-text";
@@ -114,7 +114,7 @@ export default function FocusModePage() {
         setCurrentAssignmentName(asn.name || 'Assignment');
         setCurrentAssignmentHtml(asn.description || null);
         setCurrentAssignmentUrl(asn.html_url || null);
-      } catch (e) {
+      } catch {
         // Ignore; show minimal info
       }
     })();

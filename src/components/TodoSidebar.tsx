@@ -730,13 +730,24 @@ export default function TodoSidebar({
     </View>
   ), [completedList]);
 
-  const sections: Record<string, React.ReactNode> = {
-    all: renderAllSection,
-    assignments: renderAssignmentsSection,
-    announcements: renderAnnouncementsSection,
-    completed: renderCompletedSection,
-    missing: renderMissingSection,
-  };
+  const sections = useMemo(
+    () => ({
+      all: renderAllSection,
+      assignments: renderAssignmentsSection,
+      announcements: renderAnnouncementsSection,
+      completed: renderCompletedSection,
+      missing: renderMissingSection,
+    }),
+    [
+      renderAllSection,
+      renderAssignmentsSection,
+      renderAnnouncementsSection,
+      renderCompletedSection,
+      renderMissingSection,
+    ]
+  );
+
+  const activeSection = sections[filter];
 
   return (
     <View
@@ -949,7 +960,7 @@ export default function TodoSidebar({
         )}
       </div>
       <div className="todo-section" role="tabpanel">
-        {useMemo(() => sections[filter], [sections, filter])}
+        {activeSection}
       </div>
     </View>
   );

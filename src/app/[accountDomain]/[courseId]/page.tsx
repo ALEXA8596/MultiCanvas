@@ -1,10 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import { View } from "@instructure/ui-view";
 import { Heading } from "@instructure/ui-heading";
 import { Text } from "@instructure/ui-text";
-import { Flex } from "@instructure/ui-flex";
 import { Link } from "@instructure/ui-link";
 import { CanvasCourse, Account, fetchCourses } from "../../../components/canvasApi";
 import CourseTodoSidebar from "../../../components/CourseTodoSidebar";
@@ -24,7 +22,6 @@ export default function CoursePage() {
 
   useEffect(() => {
     if (!accountDomain || isNaN(courseId)) return;
-    const cancelled = false;
 
     // load account from localStorage
     try {

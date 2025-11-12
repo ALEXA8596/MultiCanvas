@@ -1,4 +1,4 @@
-import { openDB, DBSchema } from 'idb';
+import { openDB, DBSchema, IDBPDatabase } from 'idb';
 
 export interface CourseSetting {
   id: string; // Combination of accountId and courseId
@@ -55,44 +55,55 @@ interface MyDB extends DBSchema {
   };
 }
 
-const dbPromise = openDB<MyDB>('multi-canvas-db', 2, {
-  upgrade(db, oldVersion) {
-    if (oldVersion < 1) {
-      db.createObjectStore('course-settings', { keyPath: 'id' });
-      const manualGradesStore = db.createObjectStore('manual-grades', {
-        keyPath: 'id',
-        autoIncrement: true,
-      });
-      manualGradesStore.createIndex('by-year', 'year');
-    }
-    if (oldVersion < 2) {
-      const termsStore = db.createObjectStore('terms', {
-        keyPath: 'id',
-        autoIncrement: true,
-      });
-      termsStore.createIndex('by-year-season', ['year', 'season'], { unique: true });
+const isBrowser = typeof window !== 'undefined' && typeof indexedDB !== 'undefined';
 
-      const termCoursesStore = db.createObjectStore('term-courses', {
-        keyPath: 'id',
-        autoIncrement: true,
-      });
-      termCoursesStore.createIndex('by-term', 'termId');
-    }
-  },
-});
+const dbPromise: Promise<IDBPDatabase<MyDB>> | null = isBrowser
+  ? openDB<MyDB>('multi-canvas-db', 2, {
+      upgrade(db, oldVersion) {
+        if (oldVersion < 1) {
+          db.createObjectStore('course-settings', { keyPath: 'id' });
+          const manualGradesStore = db.createObjectStore('manual-grades', {
+            keyPath: 'id',
+            autoIncrement: true,
+          });
+          manualGradesStore.createIndex('by-year', 'year');
+        }
+        if (oldVersion < 2) {
+          const termsStore = db.createObjectStore('terms', {
+            keyPath: 'id',
+            autoIncrement: true,
+          });
+          termsStore.createIndex('by-year-season', ['year', 'season'], { unique: true });
+
+          const termCoursesStore = db.createObjectStore('term-courses', {
+            keyPath: 'id',
+            autoIncrement: true,
+          });
+          termCoursesStore.createIndex('by-term', 'termId');
+        }
+      },
+    })
+  : null;
+
+function requireDb(): Promise<IDBPDatabase<MyDB>> {
+  if (!dbPromise) {
+    throw new Error('IndexedDB is only available in the browser runtime.');
+  }
+  return dbPromise;
+}
 
 // --- Course Settings ---
 
 export async function getCourseSettings() {
-  return (await dbPromise).getAll('course-settings');
+  return (await requireDb()).getAll('course-settings');
 }
 
 export async function getCourseSetting(id: string) {
-  return (await dbPromise).get('course-settings', id);
+  return (await requireDb()).get('course-settings', id);
 }
 
 export async function setCourseSetting(setting: CourseSetting) {
-  const db = await dbPromise;
+  const db = await requireDb();
   const tx = db.transaction('course-settings', 'readwrite');
   await tx.store.put(setting);
   await tx.done;
@@ -102,36 +113,36 @@ export async function setCourseSetting(setting: CourseSetting) {
 // --- Manual Grades ---
 
 export async function getManualGrades() {
-  return (await dbPromise).getAll('manual-grades');
+  return (await requireDb()).getAll('manual-grades');
 }
 
 export async function addManualGrade(grade: ManualGrade) {
-  return (await dbPromise).add('manual-grades', grade);
+  return (await requireDb()).add('manual-grades', grade);
 }
 
 export async function updateManualGrade(grade: ManualGrade) {
-  return (await dbPromise).put('manual-grades', grade);
+  return (await requireDb()).put('manual-grades', grade);
 }
 
 export async function deleteManualGrade(id: number) {
-  return (await dbPromise).delete('manual-grades', id);
+  return (await requireDb()).delete('manual-grades', id);
 }
 
 // --- Terms ---
 export async function getTerms() {
-  return (await dbPromise).getAll('terms');
+  return (await requireDb()).getAll('terms');
 }
 
 export async function addTerm(term: Term) {
-  return (await dbPromise).add('terms', term);
+  return (await requireDb()).add('terms', term);
 }
 
 export async function updateTerm(term: Term) {
-  return (await dbPromise).put('terms', term);
+  return (await requireDb()).put('terms', term);
 }
 
 export async function deleteTerm(id: number) {
-  const db = await dbPromise;
+  const db = await requireDb();
   const tx = db.transaction(['terms', 'term-courses'], 'readwrite');
   // Delete all courses for this term
   const courses = await tx.objectStore('term-courses').index('by-term').getAll(id);
@@ -144,21 +155,21 @@ export async function deleteTerm(id: number) {
 
 // --- Term Courses ---
 export async function getTermCourses(termId: number) {
-  return (await dbPromise).getAllFromIndex('term-courses', 'by-term', termId);
+  return (await requireDb()).getAllFromIndex('term-courses', 'by-term', termId);
 }
 
 export async function getAllTermCourses() {
-    return (await dbPromise).getAll('term-courses');
+    return (await requireDb()).getAll('term-courses');
 }
 
 export async function addTermCourse(course: TermCourse) {
-  return (await dbPromise).add('term-courses', course);
+  return (await requireDb()).add('term-courses', course);
 }
 
 export async function updateTermCourse(course: TermCourse) {
-  return (await dbPromise).put('term-courses', course);
+  return (await requireDb()).put('term-courses', course);
 }
 
 export async function deleteTermCourse(id: number) {
-  return (await dbPromise).delete('term-courses', id);
+  return (await requireDb()).delete('term-courses', id);
 }

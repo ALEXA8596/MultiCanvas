@@ -1,10 +1,10 @@
 "use client";
 import React, { useCallback, useState } from "react";
 import { Account, DashboardCard as DashboardCardType } from "./canvasApi";
-import { View } from "@instructure/ui-view";
 import { Heading } from "@instructure/ui-heading";
 import { Text } from "@instructure/ui-text";
 import { Link } from "@instructure/ui-link";
+import Image from "next/image";
 // import "../app/stylesheets/bundles/dashboard_card-3d0c6d4d27.css";
 
 type Props = {
@@ -97,9 +97,11 @@ export default function DashboardCardComponent({ card }: Props) {
                   Loading...
                 </div>
               )}
-              <img
+              <Image
                 src={card.image}
                 alt={`${card.longName || card.shortName || card.originalName} course image`}
+                width={600}
+                height={360}
                 style={{
                   width: '100%',
                   height: '120px',
@@ -112,6 +114,7 @@ export default function DashboardCardComponent({ card }: Props) {
                   setImageError(true);
                   setImageLoaded(false);
                 }}
+                unoptimized
               />
             </div>
           ) : card.color ? (

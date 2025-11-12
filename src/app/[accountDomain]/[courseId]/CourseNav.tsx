@@ -1,9 +1,5 @@
 "use client";
 import { usePathname } from "next/navigation";
-import { View } from "@instructure/ui-view";
-import { Flex } from "@instructure/ui-flex";
-import { Link } from "@instructure/ui-link";
-import { Text } from "@instructure/ui-text";
 
 interface CourseNavProps {
   accountDomain: string;

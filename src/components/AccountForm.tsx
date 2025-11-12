@@ -8,10 +8,6 @@ type Account = {
   apiKey: string;
 };
 
-type AccountFormProps = {
-  onAccountsChange?: (accounts: Account[]) => void;
-};
-
 export default function AccountForm({ onAccountsChange }: { onAccountsChange?: (accounts: Account[]) => void }) {
   const [domain, setDomain] = useState("");
   const [apiKey, setApiKey] = useState("");
@@ -23,7 +19,7 @@ export default function AccountForm({ onAccountsChange }: { onAccountsChange?: (
     try {
       const raw = localStorage.getItem("accounts");
       if (raw) setAccounts(JSON.parse(raw));
-    } catch (e) {
+    } catch {
       // ignore parse errors
     }
   }, []);

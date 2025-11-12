@@ -95,7 +95,7 @@ export default function RootLayout({
           }
         }
         setCourses(flat);
-      } catch (e) {
+      } catch {
         // ignore failures here; dropdown will be empty
       }
     })();
@@ -103,6 +103,10 @@ export default function RootLayout({
       cancelled = true;
     };
   }, []);
+
+  const hasAccounts = accounts.length > 0;
+  const appTitle = typeof metadata.title === "string" ? metadata.title : "MultiCanvas";
+
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
@@ -116,7 +120,7 @@ export default function RootLayout({
             className="title-bar"
           >
             <Heading level="h3" margin="0 0 0 0" className="text-gradient">
-              MultiCanvas
+              {appTitle}
             </Heading>
             <div style={{ marginLeft: "auto" }}>
               <ThemeToggle />
@@ -188,7 +192,10 @@ export default function RootLayout({
                               style={{ position: "relative", width: "100%" }}
                             >
                               <button
-                                onClick={() => setCoursesOpen((o) => !o)}
+                                onClick={() => {
+                                  if (!hasAccounts) return;
+                                  setCoursesOpen((o) => !o);
+                                }}
                                 style={{
                                   background: "transparent",
                                   border: "none",
@@ -196,6 +203,8 @@ export default function RootLayout({
                                   cursor: "pointer",
                                   // color: active ? 'var(--foreground)' : 'var(--foreground)'
                                 }}
+                                disabled={!hasAccounts}
+                                aria-disabled={!hasAccounts}
                               >
                                 <Text
                                   size="x-small"
@@ -212,7 +221,7 @@ export default function RootLayout({
                                 </Text>
                               </button>
 
-                              {coursesOpen && (
+                              {coursesOpen && hasAccounts && (
                                 <div
                                   id="nav-tray-portal"
                                   style={{

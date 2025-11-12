@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useMemo } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { View } from "@instructure/ui-view";
 import { Heading } from "@instructure/ui-heading";
 import { Text } from "@instructure/ui-text";
@@ -13,7 +13,6 @@ import { Button } from "@instructure/ui-buttons";
 
 export default function AssignmentsListPage() {
   const params = useParams();
-  const router = useRouter();
   const accountDomain = params?.accountDomain as string;
   const courseIdStr = params?.courseId as string;
   const courseId = courseIdStr ? parseInt(courseIdStr, 10) : NaN;

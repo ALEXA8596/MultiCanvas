@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Account } from "../../components/canvasApi";
 import {
   CourseSetting,
   getCourseSettings,
@@ -15,16 +14,10 @@ import { Table } from "@instructure/ui-table";
 import { NumberInput } from "@instructure/ui-number-input";
 
 export default function SettingsPage() {
-  const [accounts, setAccounts] = useState<Account[]>([]);
   const [courseSettings, setCourseSettings] = useState<CourseSetting[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const savedAccounts = localStorage.getItem("accounts");
-    if (savedAccounts) {
-      setAccounts(JSON.parse(savedAccounts));
-    }
-
     async function loadData() {
       setLoading(true);
       const settings = await getCourseSettings();

@@ -296,8 +296,6 @@ export async function fetchPlannerItems(account: Account, urlSearchParams: strin
 
 export async function getMissingSubmissions(account: Account) {
   // /api/v1/users/self/missing_submissions?include%5B%5D=planner_overrides&filter%5B%5D=current_grading_period&filter%5B%5D=submittable&per_page=100
-
-  const url = `/api/canvas?domain=${encodeURIComponent(account.domain)}&apiKey=${encodeURIComponent(account.apiKey)}&path=${encodeURIComponent("users/self/missing_submissions?include%5B%5D=planner_overrides&filter%5B%5D=current_grading_period&filter%5B%5D=submittable&per_page=100")}`;
   const res = await canvasFetch(account, "users/self/missing_submissions?include%5B%5D=planner_overrides&filter%5B%5D=current_grading_period&filter%5B%5D=submittable&per_page=100");
   if (!res.ok) throw new Error(`Failed to fetch missing submissions for ${account.domain}`);
   return res.json();

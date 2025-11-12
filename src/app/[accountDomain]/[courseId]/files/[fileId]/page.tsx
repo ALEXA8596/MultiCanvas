@@ -5,6 +5,7 @@ import { View } from '@instructure/ui-view';
 import { Heading } from '@instructure/ui-heading';
 import { Text } from '@instructure/ui-text';
 import { Link } from '@instructure/ui-link';
+import Image from 'next/image';
 import CourseNav from '../../CourseNav';
 import CourseHeader from '../../CourseHeader';
 import { Account, CanvasFile, fetchCourseFile } from '../../../../../components/canvasApi';
@@ -138,11 +139,22 @@ export default function FileDetailPage() {
 											{textPreview}
 										</pre>
 									)}
-									{!textPreview && (file.content_type||'').startsWith('image/') && (
-										<div style={{ maxWidth: '640px' }}>
-											<img src={objectUrl || file.url || file.preview_url || ''} alt={file.display_name || file.filename || 'image'} style={{ maxWidth: '100%', borderRadius: 8, border: '1px solid var(--border)' }} />
-										</div>
-									)}
+																		{!textPreview && (file.content_type || '').startsWith('image/') && (() => {
+																			const imageSrc = objectUrl || file.url || file.preview_url || null;
+																			if (!imageSrc) return null;
+																			return (
+																				<div style={{ maxWidth: '640px' }}>
+																					<Image
+																						src={imageSrc}
+																						alt={file.display_name || file.filename || 'image'}
+																						width={640}
+																						height={360}
+																						style={{ width: '100%', height: 'auto', borderRadius: 8, border: '1px solid var(--border)' }}
+																						unoptimized
+																					/>
+																				</div>
+																			);
+																		})()}
 									{!textPreview && (/(pdf)$/i.test(file.content_type||'') || /(\.pdf)$/i.test(file.display_name || file.filename || '')) && (
 										<div style={{ width: '100%', maxWidth: '840px', height: '600px', border: '1px solid var(--border)', borderRadius: 8, overflow: 'hidden', background: '#fff', position: 'relative' }}>
 											{/* Try iframe first */}

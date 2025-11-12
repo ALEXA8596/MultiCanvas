@@ -1,14 +1,7 @@
 "use client"
 import { useEffect, useState } from "react"
 import AccountForm from "../../components/AccountForm"
-import {
-  fetchAllCourses,
-  Account,
-  fetchDashboardCards,
-  fetchPlannerItems,
-  getMissingSubmissions,
-  PlannerItem
-} from "../../components/canvasApi"
+import { fetchAllCourses, Account } from "../../components/canvasApi"
 import { View } from "@instructure/ui-view"
 import { Flex } from "@instructure/ui-flex"
 import { Heading } from "@instructure/ui-heading"
