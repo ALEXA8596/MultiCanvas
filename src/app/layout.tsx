@@ -7,11 +7,12 @@ import "./globals.css";
 
 import { View } from "@instructure/ui-view";
 import { Flex } from "@instructure/ui-flex";
+import Link from "next/link";
 import { Heading } from "@instructure/ui-heading";
 import { Text } from "@instructure/ui-text";
-import { Link } from "@instructure/ui-link";
+import { Link as UILink } from "@instructure/ui-link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { fetchAllCourses, CanvasCourse, Account } from "@/components/canvasApi";
 import { getCourseSettingId } from "@/lib/db";
 import { getCourseDisplay } from "@/lib/courseDisplay";
@@ -106,6 +107,14 @@ export default function RootLayout({
 
   const hasAccounts = accounts.length > 0;
   const appTitle = typeof metadata.title === "string" ? metadata.title : "MultiCanvas";
+  const isNavItemActive = useCallback(
+    (href: string) => {
+      if (!href) return false;
+      if (href === "/") return pathname === "/";
+      return pathname === href || pathname.startsWith(`${href}/`);
+    },
+    [pathname]
+  );
 
   return (
     <html lang="en">
@@ -133,7 +142,7 @@ export default function RootLayout({
             <View
               background="primary"
               padding="low 0"
-              width="5rem"
+              width="6rem"
               borderWidth="0 small 0 0"
               shadow="resting"
               as="nav"
@@ -150,11 +159,12 @@ export default function RootLayout({
                 direction="column"
                 gap="x-small"
                 margin="0"
-                padding="small"
+                padding="0"
                 alignItems="center"
               >
                 {NAV_ITEMS.map((item, index) => {
-                  const active = pathname === item.href;
+                  const active = isNavItemActive(item.href);
+                  const baseClasses = `nav-item${active ? " nav-item--active" : ""}`;
                   return (
                     <View
                       key={item.label}
@@ -168,254 +178,195 @@ export default function RootLayout({
                     >
                       {item.label === "Courses" ? (
                         <div
-                          // className={`nav-item-modern ${active ? "active" : ""}`}
-                          style={{}}
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            width: "100%",
+                          }}
                         >
-                          <div
-                            style={{
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "center",
-                              justifyContent: "center",
+                          <button
+                            type="button"
+                            className={`${baseClasses}${!hasAccounts ? " nav-item--disabled" : ""}`}
+                            onClick={() => {
+                              if (!hasAccounts) return;
+                              setCoursesOpen((o) => !o);
                             }}
+                            disabled={!hasAccounts}
+                            aria-disabled={!hasAccounts}
+                            aria-haspopup="dialog"
+                            aria-expanded={coursesOpen}
+                            aria-controls="nav-tray-portal"
                           >
-                            <FontAwesomeIcon
-                              icon={item.icon}
-                              style={{
-                                fontSize: "2.5rem",
-                                color: active
-                                  ? "var(--foreground)"
-                                  : "var(--primary)",
-                              }}
-                            />
-                            <div
-                              style={{ position: "relative", width: "100%" }}
-                            >
-                              <button
-                                onClick={() => {
-                                  if (!hasAccounts) return;
-                                  setCoursesOpen((o) => !o);
-                                }}
-                                style={{
-                                  background: "transparent",
-                                  border: "none",
-                                  padding: 0,
-                                  cursor: "pointer",
-                                  // color: active ? 'var(--foreground)' : 'var(--foreground)'
-                                }}
-                                disabled={!hasAccounts}
-                                aria-disabled={!hasAccounts}
+                            <span className="nav-item__content">
+                              <FontAwesomeIcon
+                                icon={item.icon}
+                                className="nav-item__icon"
+                              />
+                              <span
+                                className={`nav-item__label${active ? " nav-item__label--active" : ""}`}
                               >
-                                <Text
-                                  size="x-small"
-                                  weight={active ? "bold" : "normal"}
-                                  style={{
-                                    color: active
-                                      ? "var(--foreground)"
-                                      : "var(--foreground)",
-                                    textAlign: "center",
-                                    lineHeight: "1.2",
-                                  }}
-                                >
-                                  {item.label}
-                                </Text>
-                              </button>
+                                {item.label}
+                              </span>
+                            </span>
+                          </button>
 
-                              {coursesOpen && hasAccounts && (
-                                <div
-                                  id="nav-tray-portal"
-                                  style={{
-                                    position: "fixed",
-                                    left: "6rem",
-                                    top: "5vw",
-                                    minWidth: "320px",
-                                    maxWidth: "calc(100% - 6rem)",
-                                    zIndex: 9999,
-                                    color: "white",
-                                    padding: "0.5rem",
-                                    background: "var(--surface-elevated)",
-                                    border: "1px solid var(--border)",
-                                    borderRadius: 8,
-                                    boxShadow: "0 6px 28px rgba(0,0,0,0.18)",
-                                  }}
+                          {coursesOpen && hasAccounts && (
+                            <div
+                              id="nav-tray-portal"
+                              style={{
+                                position: "fixed",
+                                left: "5rem",
+                                top: "5vw",
+                                minWidth: "320px",
+                                maxWidth: "calc(100% - 5rem)",
+                                zIndex: 9999,
+                                color: "white",
+                                padding: "0.5rem",
+                                background: "var(--surface-elevated)",
+                                border: "1px solid var(--border)",
+                                borderRadius: 8,
+                                boxShadow: "0 6px 28px rgba(0,0,0,0.18)",
+                              }}
+                            >
+                              <span dir="ltr">
+                                <span
+                                  dir="ltr"
+                                  className="css-1gto5tw-tray transition--slide-left-entered"
                                 >
-                                  <span dir="ltr">
-                                    <span
-                                      dir="ltr"
-                                      className="css-1gto5tw-tray transition--slide-left-entered"
+                                  <div
+                                    role="dialog"
+                                    aria-label="Courses tray"
+                                  >
+                                    <div
+                                      className="css-1kdtqv3-tray__content"
+                                      style={{ padding: "0.5rem" }}
                                     >
                                       <div
-                                        role="dialog"
-                                        aria-label="Courses tray"
+                                        className="navigation-tray-container courses-tray"
+                                        style={{
+                                          display: "flex",
+                                          gap: "0.5rem",
+                                          flexDirection: "column",
+                                        }}
                                       >
-                                        <div
-                                          className="css-1kdtqv3-tray__content"
-                                          style={{ padding: "0.5rem" }}
-                                        >
-                                          <div
-                                            className="navigation-tray-container courses-tray"
-                                            style={{
-                                              display: "flex",
-                                              gap: "0.5rem",
-                                              flexDirection: "column",
-                                            }}
-                                          >
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
-                                              <h2 dir="ltr" className="css-1hr8vi3-view-heading" style={{ margin: 0 }}>Courses</h2>
-                                              <span className="css-zvg8k4-closeButton">
-                                                <button aria-label="Close" type="button" onClick={() => setCoursesOpen(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
-                                                  <span style={{ display: 'inline-flex', alignItems: 'center' }}>
-                                                    <svg viewBox="0 0 1920 1920" width="1em" height="1em" aria-hidden="true" role="presentation" focusable="false" style={{ width: '1em', height: '1em' }}>
-                                                      <g role="presentation"><path d="M797.32 985.882 344.772 1438.43l188.561 188.562 452.549-452.549 452.548 452.549 188.562-188.562-452.549-452.548 452.549-452.549-188.562-188.561L985.882 797.32 533.333 344.772 344.772 533.333z"></path></g>
-                                                    </svg>
-                                                    <span style={{ position: 'absolute', left: '-9999px' }}>Close</span>
-                                                  </span>
-                                                </button>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+                                          <h2 dir="ltr" className="css-1hr8vi3-view-heading" style={{ margin: 0 }}>Courses</h2>
+                                          <span className="css-zvg8k4-closeButton">
+                                            <button aria-label="Close" type="button" onClick={() => setCoursesOpen(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
+                                              <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                                                <svg viewBox="0 0 1920 1920" width="1em" height="1em" aria-hidden="true" role="presentation" focusable="false" style={{ width: '1em', height: '1em' }}>
+                                                  <g role="presentation"><path d="M797.32 985.882 344.772 1438.43l188.561 188.562 452.549-452.549 452.548 452.549 188.562-188.562-452.549-452.548 452.549-452.549-188.562-188.561L985.882 797.32 533.333 344.772 344.772 533.333z"></path></g>
+                                                </svg>
+                                                <span style={{ position: 'absolute', left: '-9999px' }}>Close</span>
                                               </span>
-                                            </div>
+                                            </button>
+                                          </span>
+                                        </div>
 
-                                            <div>
-                                              <div dir="ltr">
-                                                <hr role="presentation" />
-                                                <span dir="ltr">
-                                                  <hr role="presentation" />
-                                                  <ul dir="ltr" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                                                    {courses.length === 0 && (
-                                                      <li
+                                        <div>
+                                          <div dir="ltr">
+                                            <hr role="presentation" />
+                                            <span dir="ltr">
+                                              <hr role="presentation" />
+                                              <ul dir="ltr" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                                                {courses.length === 0 && (
+                                                  <li
+                                                    style={{
+                                                      padding: "0.5rem",
+                                                    }}
+                                                  >
+                                                    <Text
+                                                      size="x-small"
+                                                      color="secondary"
+                                                    >
+                                                      No courses
+                                                    </Text>
+                                                  </li>
+                                                )}
+                                                {courses.map(({ account, course }) => {
+                                                  const setting = courseSettings[
+                                                    getCourseSettingId(account.domain, course.id)
+                                                  ];
+                                                  const { displayName, subtitle } = getCourseDisplay({
+                                                    actualName: course.name,
+                                                    nickname: setting?.nickname,
+                                                    fallback: course.name,
+                                                  });
+                                                  return (
+                                                    <li
+                                                      key={`${account.domain}-${course.id}`}
+                                                      style={{
+                                                        padding: "0.25rem 0",
+                                                        borderBottom: "1px solid rgba(0,0,0,0.04)",
+                                                      }}
+                                                    >
+                                                      <UILink
+                                                        href={`/${account.domain}/${course.id}`}
+                                                        isWithinText={false}
+                                                        interaction="enabled"
                                                         style={{
-                                                          padding: "0.5rem",
+                                                          textDecoration: "underline",
+                                                          color: "var(--primary)",
+                                                          display: "inline-block",
                                                         }}
                                                       >
-                                                        <Text
-                                                          size="x-small"
-                                                          color="secondary"
-                                                        >
-                                                          No courses
-                                                        </Text>
-                                                      </li>
-                                                    )}
-                                                    {courses.map(({ account, course }) => {
-                                                      const setting = courseSettings[
-                                                        getCourseSettingId(account.domain, course.id)
-                                                      ];
-                                                      const { displayName, subtitle } = getCourseDisplay({
-                                                        actualName: course.name,
-                                                        nickname: setting?.nickname,
-                                                        fallback: course.name,
-                                                      });
-                                                      return (
-                                                        <li
-                                                          key={`${account.domain}-${course.id}`}
+                                                        <div style={{ fontWeight: 600 }}>{displayName}</div>
+                                                      </UILink>
+                                                      {subtitle && (
+                                                        <div
                                                           style={{
-                                                            padding: "0.25rem 0",
-                                                            borderBottom: "1px solid rgba(0,0,0,0.04)",
+                                                            color: "var(--muted)",
+                                                            fontSize: "0.8rem",
                                                           }}
                                                         >
-                                                          <Link
-                                                            href={`/${account.domain}/${course.id}`}
-                                                            isWithinText={false}
-                                                            interaction="enabled"
-                                                            style={{
-                                                              textDecoration: "underline",
-                                                              color: "var(--primary)",
-                                                              display: "inline-block",
-                                                            }}
-                                                          >
-                                                            <div style={{ fontWeight: 600 }}>{displayName}</div>
-                                                          </Link>
-                                                          {subtitle && (
-                                                            <div
-                                                              style={{
-                                                                color: "var(--muted)",
-                                                                fontSize: "0.8rem",
-                                                              }}
-                                                            >
-                                                              {subtitle}
-                                                            </div>
-                                                          )}
-                                                          {(course.course_code || course.friendly_name) && (
-                                                            <div
-                                                              style={{
-                                                                color: "var(--muted)",
-                                                                fontSize: "0.7rem",
-                                                              }}
-                                                            >
-                                                              {course.course_code || course.friendly_name || ""}
-                                                            </div>
-                                                          )}
-                                                        </li>
-                                                      );
-                                                    })}
-                                                  </ul>
-                                                </span>
-                                              </div>
-                                            </div>
+                                                          {subtitle}
+                                                        </div>
+                                                      )}
+                                                      {(course.course_code || course.friendly_name) && (
+                                                        <div
+                                                          style={{
+                                                            color: "var(--muted)",
+                                                            fontSize: "0.7rem",
+                                                          }}
+                                                        >
+                                                          {course.course_code || course.friendly_name || ""}
+                                                        </div>
+                                                      )}
+                                                    </li>
+                                                  );
+                                                })}
+                                              </ul>
+                                            </span>
                                           </div>
                                         </div>
                                       </div>
-                                    </span>
-                                  </span>
-                                </div>
-                              )}
+                                    </div>
+                                  </div>
+                                </span>
+                              </span>
                             </div>
-                          </div>
+                          )}
                         </div>
                       ) : (
                         <Link
                           href={item.href}
-                          isWithinText={false}
-                          interaction="enabled"
-                          style={{
-                            textDecoration: "none",
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            padding: "0.75rem 0.5rem",
-                            margin: "0.125rem",
-                            borderRadius: "var(--radius-md)",
-                            transition: "all var(--transition-fast)",
-                            background: active
-                              ? "var(--gradient-primary)"
-                              : "transparent",
-                            color: active ? "white" : "var(--foreground)",
-                            position: "relative",
-                            minHeight: "4rem",
-                            width: "100%",
-                          }}
+                          className={baseClasses}
+                          aria-current={active ? "page" : undefined}
+                          onClick={() => setCoursesOpen(false)}
+                          prefetch={false}
                         >
-                          <div
-                            style={{
-                              display: "flex",
-                              flexDirection: "column",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              gap: "0.25rem",
-                            }}
-                          >
+                          <span className="nav-item__content">
                             <FontAwesomeIcon
                               icon={item.icon}
-                              style={{
-                                fontSize: "2.5rem",
-                                color: active
-                                  ? "var(--foreground)"
-                                  : "var(--primary)",
-                              }}
+                              className="nav-item__icon"
                             />
-                            <Text
-                              size="x-small"
-                              weight={active ? "bold" : "normal"}
-                              style={{
-                                color: active
-                                  ? "var(--foreground)"
-                                  : "var(--foreground)",
-                                textAlign: "center",
-                                lineHeight: "1.2",
-                              }}
+                            <span
+                              className={`nav-item__label${active ? " nav-item__label--active" : ""}`}
                             >
                               {item.label}
-                            </Text>
-                          </div>
+                            </span>
+                          </span>
                         </Link>
                       )}
                     </View>
