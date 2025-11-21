@@ -112,7 +112,7 @@ export default function DashboardCardComponent({ card, setting, onOpenSettings }
               }}
               style={{
                 border: 'none',
-                background: 'rgba(255,255,255,0.9)',
+                background: 'var(--background)',
                 borderRadius: '999px',
                 padding: '0.35rem 0.6rem',
                 cursor: 'pointer',

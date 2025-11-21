@@ -528,11 +528,8 @@ export default function Home() {
           backgroundClip: 'text',
           fontWeight: '700'
         }}>
-          Dashboard Overview
+          Dashboard
         </Heading>
-        <Text size="medium" style={{ color: 'var(--text-muted)' }}>
-          Your Canvas courses and activities at a glance
-        </Text>
       </div>
 
       {error && (
@@ -551,82 +548,82 @@ export default function Home() {
       )}
 
       {/* Dashboard Stats */}
-      <div style={{
+      {/* <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '1.5rem',
-        marginBottom: '2rem',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+        gap: '1rem',
+        marginBottom: '1.5rem',
         marginInline: 'auto'
       }}>
         <div className="modern-card" style={{
-          padding: '1.5rem',
+          padding: '1rem',
           textAlign: 'center'
         }}>
           <div style={{ 
-            fontSize: '2.5rem', 
+            fontSize: '1.25rem', 
             fontWeight: '700', 
             color: 'var(--primary)',
-            marginBottom: '0.5rem'
+            marginBottom: '0.25rem'
           }}>{mergedDashboardCards.length}</div>
           <div style={{ 
-            fontSize: '0.875rem', 
+            fontSize: '0.75rem', 
             color: 'var(--text-muted)',
             textTransform: 'uppercase',
             letterSpacing: '0.05em'
           }}>Active Courses</div>
         </div>
         <div className="modern-card" style={{
-          padding: '1.5rem',
+          padding: '1rem',
           textAlign: 'center'
         }}>
           <div style={{ 
-            fontSize: '2.5rem', 
+            fontSize: '1.25rem', 
             fontWeight: '700', 
             color: 'var(--primary)',
-            marginBottom: '0.5rem'
+            marginBottom: '0.25rem'
           }}>{assignmentItems.length}</div>
           <div style={{ 
-            fontSize: '0.875rem', 
+            fontSize: '0.75rem', 
             color: 'var(--text-muted)',
             textTransform: 'uppercase',
             letterSpacing: '0.05em'
           }}>Assignments</div>
         </div>
         <div className="modern-card" style={{
-          padding: '1.5rem',
+          padding: '1rem',
           textAlign: 'center'
         }}>
           <div style={{ 
-            fontSize: '2.5rem', 
+            fontSize: '1.25rem', 
             fontWeight: '700', 
             color: 'var(--primary)',
-            marginBottom: '0.5rem'
+            marginBottom: '0.25rem'
           }}>{announcementItems.length}</div>
           <div style={{ 
-            fontSize: '0.875rem', 
+            fontSize: '0.75rem', 
             color: 'var(--text-muted)',
             textTransform: 'uppercase',
             letterSpacing: '0.05em'
           }}>Announcements</div>
         </div>
         <div className="modern-card" style={{
-          padding: '1.5rem',
+          padding: '1rem',
           textAlign: 'center'
         }}>
           <div style={{ 
-            fontSize: '2.5rem', 
+            fontSize: '1.25rem', 
             fontWeight: '700', 
             color: 'var(--primary)',
-            marginBottom: '0.5rem'
+            marginBottom: '0.25rem'
           }}>{missingSubmissions.length}</div>
           <div style={{ 
-            fontSize: '0.875rem', 
+            fontSize: '0.75rem', 
             color: 'var(--text-muted)',
             textTransform: 'uppercase',
             letterSpacing: '0.05em'
           }}>Missing Items</div>
         </div>
-      </div>
+      </div> */}
 
       <Flex 
         direction="row" 

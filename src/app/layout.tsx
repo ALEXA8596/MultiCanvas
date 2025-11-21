@@ -141,8 +141,7 @@ export default function RootLayout({
           >
             <View
               background="primary"
-              padding="low 0"
-              width="6rem"
+              // padding="0"
               borderWidth="0 small 0 0"
               shadow="resting"
               as="nav"
@@ -150,17 +149,16 @@ export default function RootLayout({
                 background: "var(--surface-elevated)",
                 borderRight: "1px solid var(--border)",
                 boxShadow: "2px 0 8px var(--shadow-light)",
-                display: "flex",
-                flexDirection: "column",
+                alignItems: "center",
               }}
               className="nav-modern slide-in-left layout-shell__nav"
             >
               <Flex
                 direction="column"
                 gap="x-small"
-                margin="0"
-                padding="0"
-                alignItems="center"
+                // margin=""
+                padding="x-small"
+                alignItems="stretch"
               >
                 {NAV_ITEMS.map((item, index) => {
                   const active = isNavItemActive(item.href);
@@ -216,10 +214,10 @@ export default function RootLayout({
                               id="nav-tray-portal"
                               style={{
                                 position: "fixed",
-                                left: "5rem",
+                                left: "6rem",
                                 top: "5vw",
                                 minWidth: "320px",
-                                maxWidth: "calc(100% - 5rem)",
+                                maxWidth: "calc(100% - 6rem)",
                                 zIndex: 9999,
                                 color: "white",
                                 padding: "0.5rem",

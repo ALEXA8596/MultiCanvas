@@ -256,12 +256,13 @@ button, a, [role="button"], .cursor-pointer {
 
 .layout-shell {
   display: grid;
-  grid-template-columns: 5rem minmax(0, 1fr);
+  grid-template-columns: 6rem minmax(0, 1fr);
   min-height: calc(100vh - 80px);
 }
 
 .layout-shell__nav {
   grid-column: 1;
+  width: 100%;
 }
 
 .layout-shell__main {
