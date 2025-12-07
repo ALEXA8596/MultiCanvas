@@ -1,5 +1,5 @@
-- [] LOCK IN MODE
+- [X] LOCK IN MODE
 - [] Calendar
-- [] Offline Storage / Mass Download
+- [X] Offline Storage / Mass Download
 - [] GPA / Grades
-- [] Better UI
+- [X] Better UI

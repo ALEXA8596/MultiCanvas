@@ -1,8 +1,11 @@
 # MultiCanvas
 
+
+
 <p align="center">
 	<img src="public/logo.jpg" alt="MultiCanvas Logo" width="160" />
-  
+  <br>
+  <b>Now with familiar Canvas styling!</b>
 </p>
 
 MultiCanvas is an app for dual-enrolled high schoolers — and anyone who likes to stay organized — that brings classes, assignments, and academic info from multiple Canvas domains into one place. Add your Canvas credentials for each domain, and view everything together with a unified Todo list, calendar, and more.
