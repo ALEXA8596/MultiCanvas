@@ -9,6 +9,9 @@ import { Flex } from "@instructure/ui-flex";
 import { Account, DiscussionTopic, fetchCourseAnnouncements } from "../../../../components/canvasApi";
 import CourseNav from "../CourseNav";
 import CourseHeader from "../CourseHeader";
+import "../../../stylesheets/announcements.css";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faUser } from "@fortawesome/free-solid-svg-icons";
 
 export default function AnnouncementsPage() {
   const params = useParams();
@@ -65,37 +68,36 @@ export default function AnnouncementsPage() {
       {loading && <Text>Loading announcements...</Text>}
       {!loading && error && <Text color="danger">{error}</Text>}
       {!loading && !error && announcements.length === 0 && <Text>No announcements found.</Text>}
-      <Flex direction="column" gap="small">
+      
+      <div className="announcements-list">
         {announcements.map((a) => (
-          <View
-            key={a.id}
-            padding="small"
-            background="primary"
-            borderWidth="small"
-            borderRadius="medium"
-            shadow="resting"
-          >
-            <Heading level="h5" margin="0 0 x-small">{a.title || `Announcement #${a.id}`}</Heading>
-            <Text size="x-small" color="secondary" as="p">
-              {a.posted_at ? new Date(a.posted_at).toLocaleString() : ""}
-            </Text>
-            {a.message && (
-              <Text
-                as="div"
-                size="small"
-                dangerouslySetInnerHTML={{ __html: a.message }}
-              />
-            )}
-            {a.html_url && account && (
-              <View margin="small 0 0">
-                <Text as="p" size="small">
-                  <Link href={`${a.html_url}`}>Open in Canvas</Link>
-                </Text>
-              </View>
-            )}
-          </View>
+          <div key={a.id} className="ic-announcement-row">
+            <div className="ic-item-row__author-col">
+              <div className="ic-avatar" title={a.author?.display_name || "User"}>
+                 <FontAwesomeIcon icon={faUser} />
+              </div>
+            </div>
+            <div className="ic-item-row__content-col">
+              <a href={a.html_url || "#"} className="ic-item-row__content-link" target="_blank" rel="noreferrer">
+                <h3>{a.title || `Announcement #${a.id}`}</h3>
+                <div 
+                  className="ic-announcement-row__content"
+                  dangerouslySetInnerHTML={{ __html: a.message || "" }}
+                />
+              </a>
+            </div>
+            <div className="ic-item-row__meta-col">
+              <div className="ic-item-row__meta-content">
+                <span className="ic-item-row__meta-content-heading">Posted on:</span>
+                <span className="ic-item-row__meta-content-timestamp">
+                  {a.posted_at ? new Date(a.posted_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : ""}
+                  {a.posted_at ? " at " + new Date(a.posted_at).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' }) : ""}
+                </span>
+              </div>
+            </div>
+          </div>
         ))}
-      </Flex>
+      </div>
     </View>
   );
 }
