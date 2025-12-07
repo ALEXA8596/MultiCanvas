@@ -95,37 +95,7 @@ export default function DashboardCardComponent({ card, setting, onOpenSettings }
             padding: '0'
           }}
         >
-          <div style={{ display: 'flex', justifyContent: 'flex-end', padding: '0.5rem' }}>
-            <button
-              type="button"
-              aria-label={`Edit settings for ${displayName}`}
-              onClick={(event) => {
-                event.stopPropagation();
-                if (onOpenSettings) {
-                  onOpenSettings({
-                    account: card.account,
-                    courseId: Number(card.id),
-                    card,
-                    setting: setting ?? undefined,
-                  });
-                }
-              }}
-              style={{
-                border: 'none',
-                background: 'var(--background)',
-                borderRadius: '999px',
-                padding: '0.35rem 0.6rem',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '0.3rem',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.1)'
-              }}
-            >
-              <FontAwesomeIcon icon={faCog} style={{ color: 'var(--primary)' }} />
-              <span style={{ fontSize: '0.75rem', color: 'var(--foreground)' }}>Settings</span>
-            </button>
-          </div>
+          <div style={{ display: 'none' }}></div>
           {card.image && !imageError ? (
             <div style={{ position: 'relative' }}>
               {!imageLoaded && (
@@ -233,43 +203,78 @@ export default function DashboardCardComponent({ card, setting, onOpenSettings }
             </div>
             <div style={{
               display: 'flex',
-              flexDirection: 'column',
-              gap: '0.25rem',
+              justifyContent: 'space-between',
+              alignItems: 'flex-end',
               marginTop: '0.75rem'
             }}>
-              <Text as="p" style={{ margin: '0' }}>
-                <Link
-                  href={baseCourseUrl}
-                  onClick={(e) => { e.stopPropagation(); }}
-                  style={{
-                    color: 'var(--primary)',
-                    textDecoration: 'none',
-                    fontWeight: '500',
-                    fontSize: '0.875rem',
-                    transition: 'color var(--transition-fast)'
-                  }}
-                >
-                  Open Course
-                </Link>
-              </Text>
-              <Text size="x-small" style={{ color: 'var(--text-muted)', margin: '0' }}>
-                <Link
-                  href={coursesPathUrl}
-                  onClick={(e) => { e.stopPropagation(); }}
-                  style={{
-                    color: 'var(--text-muted)',
-                    textDecoration: 'none',
-                    transition: 'color var(--transition-fast)'
-                  }}
-                >
-                  {card.account.domain}
-                </Link>
-              </Text>
-              {typeof setting?.credits === 'number' && (
-                <Text size="x-small" color="secondary" style={{ margin: '0' }}>
-                  Credits: {setting.credits}
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.25rem',
+              }}>
+                <Text as="p" style={{ margin: '0' }}>
+                  <Link
+                    href={baseCourseUrl}
+                    onClick={(e) => { e.stopPropagation(); }}
+                    style={{
+                      color: 'var(--primary)',
+                      textDecoration: 'none',
+                      fontWeight: '500',
+                      fontSize: '0.875rem',
+                      transition: 'color var(--transition-fast)'
+                    }}
+                  >
+                    Open Course
+                  </Link>
                 </Text>
-              )}
+                <Text size="x-small" style={{ color: 'var(--text-muted)', margin: '0' }}>
+                  <Link
+                    href={coursesPathUrl}
+                    onClick={(e) => { e.stopPropagation(); }}
+                    style={{
+                      color: 'var(--text-muted)',
+                      textDecoration: 'none',
+                      transition: 'color var(--transition-fast)'
+                    }}
+                  >
+                    {card.account.domain}
+                  </Link>
+                </Text>
+                {typeof setting?.credits === 'number' && (
+                  <Text size="x-small" color="secondary" style={{ margin: '0' }}>
+                    Credits: {setting.credits}
+                  </Text>
+                )}
+              </div>
+              <button
+                type="button"
+                aria-label={`Edit settings for ${displayName}`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  if (onOpenSettings) {
+                    onOpenSettings({
+                      account: card.account,
+                      courseId: Number(card.id),
+                      card,
+                      setting: setting ?? undefined,
+                    });
+                  }
+                }}
+                style={{
+                  border: 'none',
+                  background: 'transparent',
+                  padding: '0.5rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  color: 'var(--text-muted)',
+                  transition: 'color 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.color = 'var(--primary)'}
+                onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
+              >
+                <FontAwesomeIcon icon={faCog} size="lg" />
+              </button>
             </div>
           </div>
         </div>
