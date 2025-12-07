@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./stylesheets/modern-pages.css";
 import "./stylesheets/components.css";
+import "./stylesheets/canvas-nav.css";
 import "./globals.css";
 
 import { View } from "@instructure/ui-view";
@@ -62,6 +63,7 @@ export default function RootLayout({
 }) {
   const pathname = usePathname();
   const [coursesOpen, setCoursesOpen] = useState(false);
+  const [navExpanded, setNavExpanded] = useState(true);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [courses, setCourses] = useState<
     Array<{ account: Account; course: CanvasCourse }>
@@ -118,260 +120,146 @@ export default function RootLayout({
 
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} ${navExpanded ? 'primary-nav-expanded' : ''}`}>
         <ThemeProvider>
-          <Flex
-            alignItems="center"
-            gap="large"
-            wrap="no-wrap"
-            padding="small small"
-            justifyItems="space-between"
-            className="title-bar"
-          >
-            <Heading level="h3" margin="0 0 0 0" className="text-gradient">
-              {appTitle}
-            </Heading>
-            <div style={{ marginLeft: "auto" }}>
-              <ThemeToggle />
-            </div>
-          </Flex>
-          <View
-            as="div"
-            className="layout-shell"
-          >
-            <View
-              background="primary"
-              // padding="0"
-              borderWidth="0 small 0 0"
-              shadow="resting"
-              as="nav"
-              style={{
-                background: "var(--surface-elevated)",
-                borderRight: "1px solid var(--border)",
-                boxShadow: "2px 0 8px var(--shadow-light)",
-                alignItems: "center",
-              }}
-              className="nav-modern slide-in-left layout-shell__nav"
-            >
-              <Flex
-                direction="column"
-                gap="x-small"
-                // margin=""
-                padding="x-small"
-                alignItems="stretch"
-              >
-                {NAV_ITEMS.map((item, index) => {
+          <header id="header" className="ic-app-header no-print" aria-label="Global Header">
+            <div className="ic-app-header__main-navigation" aria-label="Global Navigation">
+              <div className="ic-app-header__logomark-container">
+                <Link href="/">
+                  <Heading level="h4" color="primary-inverse" margin="0">MC</Heading>
+                </Link>
+              </div>
+              <ul id="menu" className="ic-app-header__menu-list">
+                {NAV_ITEMS.map((item) => {
                   const active = isNavItemActive(item.href);
-                  const baseClasses = `nav-item${active ? " nav-item--active" : ""}`;
-                  return (
-                    <View
-                      key={item.label}
-                      margin="0"
-                      padding="0"
-                      className="scale-in"
-                      style={{
-                        animationDelay: `${index * 0.1}s`,
-                        width: "100%",
-                      }}
-                    >
-                      {item.label === "Courses" ? (
-                        <div
-                          style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            alignItems: "center",
-                            width: "100%",
+                  const itemClass = `menu-item ic-app-header__menu-list-item ${active ? 'ic-app-header__menu-list-item--active' : ''}`;
+                  
+                  if (item.label === "Courses") {
+                    return (
+                      <li key={item.label} className={itemClass}>
+                        <button
+                          type="button"
+                          className="ic-app-header__menu-list-link"
+                          onClick={() => {
+                            if (!hasAccounts) return;
+                            setCoursesOpen((o) => !o);
                           }}
+                          disabled={!hasAccounts}
+                          style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
                         >
-                          <button
-                            type="button"
-                            className={`${baseClasses}${!hasAccounts ? " nav-item--disabled" : ""}`}
-                            onClick={() => {
-                              if (!hasAccounts) return;
-                              setCoursesOpen((o) => !o);
-                            }}
-                            disabled={!hasAccounts}
-                            aria-disabled={!hasAccounts}
-                            aria-haspopup="dialog"
-                            aria-expanded={coursesOpen}
-                            aria-controls="nav-tray-portal"
-                          >
-                            <span className="nav-item__content">
-                              <FontAwesomeIcon
-                                icon={item.icon}
-                                className="nav-item__icon"
-                              />
-                              <span
-                                className={`nav-item__label${active ? " nav-item__label--active" : ""}`}
-                              >
-                                {item.label}
-                              </span>
-                            </span>
-                          </button>
-
-                          {coursesOpen && hasAccounts && (
+                          <div className="menu-item-icon-container">
+                            <FontAwesomeIcon icon={item.icon} className="ic-icon-svg" style={{ width: '26px', height: '26px' }} />
+                          </div>
+                          <div className="menu-item__text">
+                            {item.label}
+                          </div>
+                        </button>
+                        {coursesOpen && hasAccounts && (
                             <div
                               id="nav-tray-portal"
                               style={{
                                 position: "fixed",
-                                left: "6rem",
-                                top: "5vw",
+                                left: navExpanded ? "84px" : "54px",
+                                top: "0",
+                                height: "100%",
                                 minWidth: "320px",
-                                maxWidth: "calc(100% - 6rem)",
+                                maxWidth: "400px",
                                 zIndex: 9999,
-                                color: "white",
-                                padding: "0.5rem",
+                                color: "var(--ic-brand-font-color-dark)",
+                                padding: "1rem",
                                 background: "var(--surface-elevated)",
-                                border: "1px solid var(--border)",
-                                borderRadius: 8,
-                                boxShadow: "0 6px 28px rgba(0,0,0,0.18)",
+                                borderRight: "1px solid var(--border)",
+                                boxShadow: "0 0 8px rgba(0,0,0,0.1)",
+                                overflowY: "auto"
                               }}
                             >
-                              <span dir="ltr">
-                                <span
-                                  dir="ltr"
-                                  className="css-1gto5tw-tray transition--slide-left-entered"
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                                <Heading level="h3" margin="0">Courses</Heading>
+                                <button 
+                                  aria-label="Close" 
+                                  type="button" 
+                                  onClick={() => setCoursesOpen(false)} 
+                                  style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '1.5rem' }}
                                 >
-                                  <div
-                                    role="dialog"
-                                    aria-label="Courses tray"
-                                  >
-                                    <div
-                                      className="css-1kdtqv3-tray__content"
-                                      style={{ padding: "0.5rem" }}
-                                    >
-                                      <div
-                                        className="navigation-tray-container courses-tray"
-                                        style={{
-                                          display: "flex",
-                                          gap: "0.5rem",
-                                          flexDirection: "column",
-                                        }}
-                                      >
-                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
-                                          <h2 dir="ltr" className="css-1hr8vi3-view-heading" style={{ margin: 0 }}>Courses</h2>
-                                          <span className="css-zvg8k4-closeButton">
-                                            <button aria-label="Close" type="button" onClick={() => setCoursesOpen(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
-                                              <span style={{ display: 'inline-flex', alignItems: 'center' }}>
-                                                <svg viewBox="0 0 1920 1920" width="1em" height="1em" aria-hidden="true" role="presentation" focusable="false" style={{ width: '1em', height: '1em' }}>
-                                                  <g role="presentation"><path d="M797.32 985.882 344.772 1438.43l188.561 188.562 452.549-452.549 452.548 452.549 188.562-188.562-452.549-452.548 452.549-452.549-188.562-188.561L985.882 797.32 533.333 344.772 344.772 533.333z"></path></g>
-                                                </svg>
-                                                <span style={{ position: 'absolute', left: '-9999px' }}>Close</span>
-                                              </span>
-                                            </button>
-                                          </span>
-                                        </div>
-
-                                        <div>
-                                          <div dir="ltr">
-                                            <hr role="presentation" />
-                                            <span dir="ltr">
-                                              <hr role="presentation" />
-                                              <ul dir="ltr" style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                                                {courses.length === 0 && (
-                                                  <li
-                                                    style={{
-                                                      padding: "0.5rem",
-                                                    }}
-                                                  >
-                                                    <Text
-                                                      size="x-small"
-                                                      color="secondary"
-                                                    >
-                                                      No courses
-                                                    </Text>
-                                                  </li>
-                                                )}
-                                                {courses.map(({ account, course }) => {
-                                                  const setting = courseSettings[
-                                                    getCourseSettingId(account.domain, course.id)
-                                                  ];
-                                                  const { displayName, subtitle } = getCourseDisplay({
-                                                    actualName: course.name,
-                                                    nickname: setting?.nickname,
-                                                    fallback: course.name,
-                                                  });
-                                                  return (
-                                                    <li
-                                                      key={`${account.domain}-${course.id}`}
-                                                      style={{
-                                                        padding: "0.25rem 0",
-                                                        borderBottom: "1px solid rgba(0,0,0,0.04)",
-                                                      }}
-                                                    >
-                                                      <UILink
-                                                        href={`/${account.domain}/${course.id}`}
-                                                        isWithinText={false}
-                                                        interaction="enabled"
-                                                        style={{
-                                                          textDecoration: "underline",
-                                                          color: "var(--primary)",
-                                                          display: "inline-block",
-                                                        }}
-                                                      >
-                                                        <div style={{ fontWeight: 600 }}>{displayName}</div>
-                                                      </UILink>
-                                                      {subtitle && (
-                                                        <div
-                                                          style={{
-                                                            color: "var(--muted)",
-                                                            fontSize: "0.8rem",
-                                                          }}
-                                                        >
-                                                          {subtitle}
-                                                        </div>
-                                                      )}
-                                                      {(course.course_code || course.friendly_name) && (
-                                                        <div
-                                                          style={{
-                                                            color: "var(--muted)",
-                                                            fontSize: "0.7rem",
-                                                          }}
-                                                        >
-                                                          {course.course_code || course.friendly_name || ""}
-                                                        </div>
-                                                      )}
-                                                    </li>
-                                                  );
-                                                })}
-                                              </ul>
-                                            </span>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                </span>
-                              </span>
+                                  &times;
+                                </button>
+                              </div>
+                              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                                {courses.length === 0 && (
+                                  <li style={{ padding: "0.5rem" }}>
+                                    <Text size="x-small" color="secondary">No courses</Text>
+                                  </li>
+                                )}
+                                {courses.map(({ account, course }) => {
+                                  const setting = courseSettings[getCourseSettingId(account.domain, course.id)];
+                                  const { displayName, subtitle } = getCourseDisplay({
+                                    actualName: course.name,
+                                    nickname: setting?.nickname,
+                                    fallback: course.name,
+                                  });
+                                  return (
+                                    <li key={`${account.domain}-${course.id}`} style={{ padding: "0.5rem 0", borderBottom: "1px solid var(--border)" }}>
+                                      <UILink href={`/${account.domain}/${course.id}`} isWithinText={false} style={{ fontWeight: 600, display: 'block' }}>
+                                        {displayName}
+                                      </UILink>
+                                      {subtitle && <Text size="small" color="secondary" as="div">{subtitle}</Text>}
+                                    </li>
+                                  );
+                                })}
+                              </ul>
                             </div>
-                          )}
+                        )}
+                      </li>
+                    );
+                  }
+
+                  return (
+                    <li key={item.label} className={itemClass}>
+                      <Link href={item.href} className="ic-app-header__menu-list-link">
+                        <div className="menu-item-icon-container">
+                          <FontAwesomeIcon icon={item.icon} className="ic-icon-svg" style={{ width: '26px', height: '26px' }} />
                         </div>
-                      ) : (
-                        <Link
-                          href={item.href}
-                          className={baseClasses}
-                          aria-current={active ? "page" : undefined}
-                          onClick={() => setCoursesOpen(false)}
-                          prefetch={false}
-                        >
-                          <span className="nav-item__content">
-                            <FontAwesomeIcon
-                              icon={item.icon}
-                              className="nav-item__icon"
-                            />
-                            <span
-                              className={`nav-item__label${active ? " nav-item__label--active" : ""}`}
-                            >
-                              {item.label}
-                            </span>
-                          </span>
-                        </Link>
-                      )}
-                    </View>
+                        <div className="menu-item__text">
+                          {item.label}
+                        </div>
+                      </Link>
+                    </li>
                   );
                 })}
-              </Flex>
-            </View>
+              </ul>
+            </div>
+            <div className="ic-app-header__secondary-navigation">
+              <ul className="ic-app-header__menu-list">
+                <li className="menu-item ic-app-header__menu-list-item">
+                  <div style={{ display: 'flex', justifyContent: 'center', padding: '0.5rem 0' }}>
+                    <ThemeToggle />
+                  </div>
+                </li>
+                <li className="menu-item ic-app-header__menu-list-item">
+                  <button 
+                    id="primaryNavToggle" 
+                    type="button"
+                    className="ic-app-header__menu-list-link ic-app-header__menu-list-link--nav-toggle" 
+                    aria-label="Minimize global navigation" 
+                    title="Minimize global navigation"
+                    onClick={() => setNavExpanded(!navExpanded)}
+                    style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
+                  >
+                    <div className="menu-item-icon-container" aria-hidden="true">
+                       <svg xmlns="http://www.w3.org/2000/svg" className="ic-icon-svg ic-icon-svg--navtoggle" version="1.1" x="0" y="0" width="40" height="32" viewBox="0 0 40 32" xmlSpace="preserve">
+                         <path d="M39.5,30.28V2.48H37.18v27.8Zm-4.93-13.9L22.17,4,20.53,5.61l9.61,9.61H.5v2.31H30.14l-9.61,9.61,1.64,1.64Z"></path>
+                       </svg>
+                    </div>
+                  </button>
+                </li>
+              </ul>
+            </div>
+          </header>
+
+          <View
+            as="div"
+            className="layout-shell"
+          >
             <View
               as="main"
               padding="0"
@@ -384,7 +272,7 @@ export default function RootLayout({
                 width: "100%"
               }}
             >
-              <div style={{ padding: "0 2rem 2rem " }}>{children}</div>
+              <div style={{ padding: "2rem" }}>{children}</div>
             </View>
           </View>
         </ThemeProvider>

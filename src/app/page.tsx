@@ -528,7 +528,7 @@ export default function Home() {
           backgroundClip: 'text',
           fontWeight: '700'
         }}>
-          Dashboard
+          <b>Dashboard</b>
         </Heading>
       </div>
 
@@ -637,24 +637,6 @@ export default function Home() {
         <Flex.Item shouldGrow shouldShrink style={{ minWidth: '300px', flex: '1' }}>
           <View as="section" margin="0" width="100%">
             <View as="div" margin="0" width="100%">
-              <Flex alignItems="center" gap="small" margin="0 0 large">
-                <Heading level="h3" margin="0" style={{ color: 'var(--foreground)' }}>
-                  Course Cards
-                </Heading>
-                <Pill 
-                  margin="0"
-                  style={{
-                    background: 'var(--gradient-primary)',
-                    color: 'white',
-                    border: 'none',
-                    padding: '0.25rem 0.75rem',
-                    borderRadius: 'var(--radius-sm)',
-                    fontWeight: '600'
-                  }}
-                >
-                  {mergedDashboardCards.length}
-                </Pill>
-              </Flex>
               
               {loading && (
                 <div style={{
