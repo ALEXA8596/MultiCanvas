@@ -178,7 +178,7 @@
     "moment": "^2.29.4",
     "moment-timezone": "^0.5.48",
     "nanoid": "3.3.8",
-    "next": "15.5.3",
+    "next": "15.5.7",
     "normalize-scroll-left": "^0.2",
     "page": "^1.11",
     "parse-decimal-number": "1.0.0",
