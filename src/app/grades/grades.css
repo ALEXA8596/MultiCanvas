@@ -1,127 +1,193 @@
+/* Grades Page Styling */
+
+.grades-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.grades-header {
+  margin-bottom: 2rem;
+}
+
+/* Card Styling */
+.grades-card {
+  background: var(--surface-elevated, #ffffff);
+  border: 1px solid var(--border, #e1e1e1);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.grades-card h3, 
+.grades-card h4 {
+  margin-top: 0;
+  color: var(--foreground-primary, #2d3b45);
+}
+
+/* Form Styling */
 .input-container {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.input-container label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--foreground-primary, #2d3b45);
 }
 
 .input-container input,
 .input-container select {
-    padding: 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 1rem;
-    width: 10em;
-    box-sizing: border-box;
+  padding: 0.625rem;
+  border: 1px solid var(--border, #c7cdd1);
+  border-radius: 4px;
+  font-size: 0.95rem;
+  background: var(--surface-primary, #fff);
+  color: var(--foreground-primary, #000);
+  transition: border-color 0.2s;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.manual-grade-form {
-    margin-bottom: 2rem;
-}
-
-.gpa-summary {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-}
-
-.course-type-hint {
-    margin-bottom: 1rem;
-}
-
-.section-header,
-.term-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-end;
-    gap: 1rem;
-    flex-wrap: wrap;
-}
-
-.section-actions,
-.term-actions {
-    display: flex;
-    gap: 0.75rem;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
-.term-grade-inline {
-    flex-direction: row;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.term-grade-inline label {
-    white-space: nowrap;
-}
-
-.term-grade-inline input {
-    height: 2.5rem;
-}
-
-.what-if-term-grades {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    margin-bottom: 1rem;
-}
-
-.table-input {
-    padding: 0.5rem;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-size: 1rem;
-    width: 10em;
-    box-sizing: border-box;
+.input-container input:focus,
+.input-container select:focus {
+  border-color: var(--brand-primary, #008ee2);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 142, 226, 0.2);
 }
 
 .form-row {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-    align-items: flex-end;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
 }
 
-.form-column {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
 }
 
-.button-row {
-    display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
-    align-items: center;
+/* GPA Summary */
+.gpa-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  padding: 1rem;
+  background: var(--surface-secondary, #f5f5f5);
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  border: 1px solid var(--border, #e1e1e1);
 }
 
-.custom-gpa-section {
-    margin-top: 2rem;
+.gpa-stat {
+  display: flex;
+  flex-direction: column;
 }
 
+.gpa-stat-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--foreground-muted, #666);
+  font-weight: 600;
+}
+
+.gpa-stat-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--brand-primary, #008ee2);
+}
+
+/* Term Header */
+.term-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border, #eee);
+  margin-bottom: 1rem;
+}
+
+.term-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* Custom GPA Config */
 .custom-gpa-config {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    margin-top: 1.5rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
 }
 
-.custom-gpa-card {
-    flex: 1 1 280px;
-    border: 1px solid #e0e0e0;
-    border-radius: 6px;
-    padding: 1rem;
-    background-color: #fafafa;
+@media (max-width: 768px) {
+  .custom-gpa-config {
+    grid-template-columns: 1fr;
+  }
 }
 
 .custom-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.75rem;
 }
 
-.custom-grid .input-container {
-    flex: 1 1 160px;
+/* Table Inputs */
+.table-input {
+  padding: 0.4rem;
+  border: 1px solid var(--border, #ccc);
+  border-radius: 4px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Buttons */
+.button-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.action-button {
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+
+.action-button.primary {
+  background-color: var(--brand-primary, #008ee2);
+  color: white;
+}
+
+.action-button.primary:hover {
+  background-color: var(--brand-hover, #007ac2);
+}
+
+.action-button.danger {
+  background-color: #e02424;
+  color: white;
+}
+
+.action-button.secondary {
+  background-color: white;
+  border-color: var(--border, #ccc);
+  color: var(--foreground-primary, #333);
+}
+
+.action-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .custom-actions {
@@ -132,15 +198,18 @@
     margin-top: 1rem;
 }
 
-.custom-gpa-section table input[type="checkbox"] {
-    width: auto;
-    height: auto;
-}
-
 .custom-extra-summary {
     display: flex;
     flex-wrap: wrap;
     gap: 0.75rem;
     margin-top: 0.5rem;
 }
+
+.what-if-term-grades {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
 

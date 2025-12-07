@@ -878,16 +878,31 @@ export default function GradesPage() {
         </Table>
       )}
 
-      <View as="section" margin="large 0 0 0">
-        <Heading level="h3" margin="0 0 medium 0">Manual Grades for GPA Calculation</Heading>
-        <View as="div" margin="0 0 medium 0" className="gpa-summary">
-          <Text><strong>Manual Unweighted GPA:</strong> {manualGPA.unweighted}</Text>
-          <Text><strong>Manual Weighted GPA:</strong> {manualGPA.weighted}</Text>
-          <Text><strong>UC Unweighted GPA:</strong> {ucUnweighted.gpa}</Text>
-          <Text><strong>UC Full Weighted GPA:</strong> {ucFullWeighted.gpa}</Text>
-          <Text><strong>UC Capped GPA:</strong> {ucGPA.gpa}</Text>
-        </View>
-        <View as="div" className="course-type-hint">
+      <div className="grades-card">
+        <h3>Manual Grades for GPA Calculation</h3>
+        <div className="gpa-summary">
+          <div className="gpa-stat">
+            <span className="gpa-stat-label">Manual Unweighted</span>
+            <span className="gpa-stat-value">{manualGPA.unweighted}</span>
+          </div>
+          <div className="gpa-stat">
+            <span className="gpa-stat-label">Manual Weighted</span>
+            <span className="gpa-stat-value">{manualGPA.weighted}</span>
+          </div>
+          <div className="gpa-stat">
+            <span className="gpa-stat-label">UC Unweighted</span>
+            <span className="gpa-stat-value">{ucUnweighted.gpa}</span>
+          </div>
+          <div className="gpa-stat">
+            <span className="gpa-stat-label">UC Full Weighted</span>
+            <span className="gpa-stat-value">{ucFullWeighted.gpa}</span>
+          </div>
+          <div className="gpa-stat">
+            <span className="gpa-stat-label">UC Capped</span>
+            <span className="gpa-stat-value">{ucGPA.gpa}</span>
+          </div>
+        </div>
+        <div className="course-type-hint">
           <Text size="small" color="secondary">
             Course type selections add weight to the manual GPA calculation (Accelerated +0.0, Honors/AP/IB/Dual/Concurrent +1.0, Academic and others +0.0).
           </Text>
@@ -900,17 +915,17 @@ export default function GradesPage() {
               Add 10th or 11th grade courses to view UC GPA metrics.
             </Text>
           )}
-        </View>
+        </div>
 
-        <div className="manual-grade-form">
-          <Heading level="h4">Add New Term</Heading>
+        <div className="grades-card" style={{ marginTop: '1.5rem', border: 'none', padding: 0, boxShadow: 'none' }}>
+          <h4>Add New Term</h4>
           <div className="form-row">
             <div className="input-container">
-                <label htmlFor="term-year"><Text>Year</Text></label>
+                <label htmlFor="term-year">Year</label>
                 <input id="term-year" type="number" value={termYear} onChange={(e) => setTermYear(Number(e.target.value))} />
             </div>
             <div className="input-container">
-                <label htmlFor="season-select"><Text>Season</Text></label>
+                <label htmlFor="season-select">Season</label>
                 <select id="season-select" value={termSeason} onChange={(e) => setTermSeason(e.target.value)}>
                     <option value="Winter">Winter</option>
                     <option value="Spring">Spring</option>
@@ -918,8 +933,8 @@ export default function GradesPage() {
                     <option value="Fall">Fall</option>
                 </select>
             </div>
-            <div className="input-container term-grade-inline">
-                <label htmlFor="term-grade-level"><Text>Grade Level (e.g., 9th)</Text></label>
+            <div className="input-container">
+                <label htmlFor="term-grade-level">Grade Level (e.g., 9th)</label>
                 <input
                   id="term-grade-level"
                   type="text"
@@ -928,15 +943,18 @@ export default function GradesPage() {
                   onChange={(e) => setTermGradeLevel(e.target.value)}
                 />
             </div>
-            <Button onClick={handleAddTerm} color="primary">Add Term</Button>
+            <div className="button-row" style={{ marginTop: 0 }}>
+                <button className="action-button primary" onClick={handleAddTerm}>Add Term</button>
+            </div>
           </div>
         </div>
 
-        <div className="manual-grade-form" style={{marginTop: '2rem'}}>
-          <Heading level="h4">{editingCourse ? "Edit" : "Add"} Course</Heading>
-          <div className="form-column">
+
+        <div className="grades-card" style={{ marginTop: '1.5rem', border: 'none', padding: 0, boxShadow: 'none' }}>
+          <h4>{editingCourse ? "Edit" : "Add"} Course</h4>
+          <div className="form-grid">
             <div className="input-container">
-                <label htmlFor="term-select"><Text>Term</Text></label>
+                <label htmlFor="term-select">Term</label>
                 <select
                   id="term-select"
                   value={selectedTermId ?? ''}
@@ -952,15 +970,15 @@ export default function GradesPage() {
                 </select>
             </div>
             <div className="input-container">
-                <label htmlFor="course-name"><Text>Course Name</Text></label>
+                <label htmlFor="course-name">Course Name</label>
                 <input id="course-name" type="text" value={formCourseName} onChange={(e) => setFormCourseName(e.target.value)} />
             </div>
             <div className="input-container">
-                <label htmlFor="course-credits"><Text>Credits</Text></label>
+                <label htmlFor="course-credits">Credits</label>
                 <input id="course-credits" type="number" value={formCredits} onChange={(e) => setFormCredits(Number(e.target.value))} />
             </div>
             <div className="input-container">
-                <label htmlFor="course-type"><Text>Course Type</Text></label>
+                <label htmlFor="course-type">Course Type</label>
                 <select
                   id="course-type"
                   value={formCourseType}
@@ -972,38 +990,41 @@ export default function GradesPage() {
                 </select>
             </div>
             <div className="input-container">
-                <label htmlFor="course-grade"><Text>Grade (e.g., A, B+)</Text></label>
+                <label htmlFor="course-grade">Grade (e.g., A, B+)</label>
                 <input id="course-grade" type="text" value={formGrade} onChange={(e) => setFormGrade(e.target.value.toUpperCase())} />
             </div>
-            <div className="button-row">
-              <Button onClick={handleSaveCourse} color="primary" disabled={!selectedTermId}>{editingCourse ? "Update" : "Add"} Course</Button>
-              {editingCourse && <Button onClick={() => { setEditingCourse(null); resetCourseForm(); }}>Cancel</Button>}
-            </div>
+          </div>
+          <div className="button-row">
+            <button className="action-button primary" onClick={handleSaveCourse} disabled={!selectedTermId}>{editingCourse ? "Update" : "Add"} Course</button>
+            {editingCourse && <button className="action-button secondary" onClick={() => { setEditingCourse(null); resetCourseForm(); }}>Cancel</button>}
           </div>
         </div>
+      </div>
+
 
         {terms.map(term => (
-            <View key={term.id} as="section" margin="medium 0 0 0">
+            <div key={term.id} className="grades-card">
                 <div className="term-header">
-                  <Heading level="h4">
+                  <h4>
                     {term.season} {term.year}
                     {term.termGrade ? ` - Grade Level: ${term.termGrade}` : ""}
-                  </Heading>
+                  </h4>
                   <div className="term-actions">
-                    <div className="input-container term-grade-inline">
-                      <label htmlFor={`term-grade-${term.id}`}><Text>Grade Level (e.g., 9th)</Text></label>
+                    <div className="input-container" style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <label htmlFor={`term-grade-${term.id}`} style={{ marginBottom: 0, marginRight: '0.5rem' }}>Grade Level</label>
                       <input
                         id={`term-grade-${term.id}`}
                         type="text"
                         value={term.termGrade ?? ""}
                         placeholder="e.g., 11th"
                         onChange={(e) => handleTermGradeChange(term, e.target.value)}
+                        style={{ width: '100px' }}
                       />
                     </div>
-                    <Button onClick={() => handleDeleteTerm(term.id!)} size="small" color="danger">Delete Term</Button>
+                    <button className="action-button danger" onClick={() => handleDeleteTerm(term.id!)}>Delete Term</button>
                   </div>
                 </div>
-                <Table caption={`${term.season} ${term.year} Grades`} margin="medium 0 0 0">
+                <Table caption={`${term.season} ${term.year} Grades`}>
                 <Table.Head>
                     <Table.Row>
                     <Table.ColHeader id="manual-course-name">Course Name</Table.ColHeader>
@@ -1021,29 +1042,39 @@ export default function GradesPage() {
             <Table.Cell>{COURSE_TYPES.find(type => type.value === (course.courseType ?? "regular"))?.label ?? "Regular"}</Table.Cell>
                         <Table.Cell>{course.grade}</Table.Cell>
                         <Table.Cell>
-              <div className="button-row">
-                            <Button onClick={() => handleEditCourse(course)} size="small">Edit</Button>
-                            <Button onClick={() => handleDeleteCourse(course.id!)} size="small" color="danger">Delete</Button>
+              <div className="button-row" style={{ marginTop: 0 }}>
+                            <button className="action-button secondary" onClick={() => handleEditCourse(course)}>Edit</button>
+                            <button className="action-button danger" onClick={() => handleDeleteCourse(course.id!)}>Delete</button>
               </div>
                         </Table.Cell>
                     </Table.Row>
                     ))}
                 </Table.Body>
                 </Table>
-            </View>
+            </div>
         ))}
 
-        <View as="section" margin="large 0 0 0" className="custom-gpa-section">
-          <Heading level="h3">Custom GPA Calculator</Heading>
+
+        <div className="grades-card">
+          <h3>Custom GPA Calculator</h3>
           <Text size="small" color="secondary">
             Choose which courses to include, customize extra weight by course type, and enforce grade-level or overall caps.
           </Text>
 
-          <View as="div" className="gpa-summary" style={{ marginTop: "0.75rem" }}>
-            <Text><strong>Custom GPA:</strong> {customGPA.gpa}</Text>
-            <Text><strong>Total Extra Points Used:</strong> {customGPA.extraUsed.toFixed(2)}</Text>
-            <Text><strong>Credits Counted:</strong> {customGPA.credits}</Text>
-          </View>
+          <div className="gpa-summary" style={{ marginTop: "1rem" }}>
+            <div className="gpa-stat">
+                <span className="gpa-stat-label">Custom GPA</span>
+                <span className="gpa-stat-value">{customGPA.gpa}</span>
+            </div>
+            <div className="gpa-stat">
+                <span className="gpa-stat-label">Extra Points Used</span>
+                <span className="gpa-stat-value">{customGPA.extraUsed.toFixed(2)}</span>
+            </div>
+            <div className="gpa-stat">
+                <span className="gpa-stat-label">Credits Counted</span>
+                <span className="gpa-stat-value">{customGPA.credits}</span>
+            </div>
+          </div>
           {Object.keys(customGPA.extraByGrade).length > 0 && (
             <div className="custom-extra-summary">
               {Object.entries(customGPA.extraByGrade).map(([grade, value]) => (
@@ -1055,13 +1086,13 @@ export default function GradesPage() {
           )}
 
           <div className="custom-gpa-config">
-            <div className="custom-gpa-card">
-              <Heading level="h4">Extra Points by Course Type</Heading>
+            <div className="grades-card" style={{ marginBottom: 0, boxShadow: 'none', border: '1px solid var(--border, #e1e1e1)' }}>
+              <h4>Extra Points by Course Type</h4>
               <Text size="small" color="secondary">Set the additional weight applied to each selected course type.</Text>
-              <div className="custom-grid">
+              <div className="custom-grid" style={{ marginTop: '1rem' }}>
                 {(["accelerated", "honors", "ap", "ib", "dual-enrollment", "concurrent-enrollment"] as const).map((typeKey) => (
                   <div key={typeKey} className="input-container">
-                    <label htmlFor={`custom-extra-${typeKey}`}><Text>{COURSE_TYPES.find(t => t.value === typeKey)?.label ?? typeKey}</Text></label>
+                    <label htmlFor={`custom-extra-${typeKey}`}>{COURSE_TYPES.find(t => t.value === typeKey)?.label ?? typeKey}</label>
                     <input
                       id={`custom-extra-${typeKey}`}
                       type="number"
@@ -1074,13 +1105,13 @@ export default function GradesPage() {
               </div>
             </div>
 
-            <div className="custom-gpa-card">
-              <Heading level="h4">Extra Point Caps</Heading>
+            <div className="grades-card" style={{ marginBottom: 0, boxShadow: 'none', border: '1px solid var(--border, #e1e1e1)' }}>
+              <h4>Extra Point Caps</h4>
               <Text size="small" color="secondary">Leave blank for no cap. Caps limit the total extra points credited per grade level and overall.</Text>
-              <div className="custom-grid">
+              <div className="custom-grid" style={{ marginTop: '1rem' }}>
                 {(["9", "10", "11", "12"]).map((gradeKey) => (
                   <div key={gradeKey} className="input-container">
-                    <label htmlFor={`custom-cap-${gradeKey}`}><Text>Grade {gradeKey} Cap</Text></label>
+                    <label htmlFor={`custom-cap-${gradeKey}`}>Grade {gradeKey} Cap</label>
                     <input
                       id={`custom-cap-${gradeKey}`}
                       type="number"
@@ -1093,7 +1124,7 @@ export default function GradesPage() {
                   </div>
                 ))}
                 <div className="input-container">
-                  <label htmlFor="custom-total-cap"><Text>Total Extra Cap</Text></label>
+                  <label htmlFor="custom-total-cap">Total Extra Cap</label>
                   <input
                     id="custom-total-cap"
                     type="number"
@@ -1109,11 +1140,12 @@ export default function GradesPage() {
           </div>
 
           <div className="custom-actions">
-            <Button onClick={handleSelectAllCustomCourses} size="small">Select All</Button>
-            <Button onClick={handleClearCustomCourses} size="small">Clear All</Button>
+            <button className="action-button secondary" onClick={handleSelectAllCustomCourses}>Select All</button>
+            <button className="action-button secondary" onClick={handleClearCustomCourses}>Clear All</button>
           </div>
 
-          <Table caption="Custom GPA Course Selection" margin="medium 0 0 0">
+          <Table caption="Custom GPA Course Selection">
+
             <Table.Head>
               <Table.Row>
                 <Table.ColHeader id="custom-select">Use</Table.ColHeader>
@@ -1154,34 +1186,40 @@ export default function GradesPage() {
               )}
             </Table.Body>
           </Table>
-        </View>
+        </div>
 
-        <View as="section" margin="large 0 0 0">
-          <div className="section-header">
-            <Heading level="h3">What-If GPA Scenario</Heading>
-            <div className="section-actions">
-              <Button onClick={startWhatIfScenario} disabled={coursesWithGrades.length === 0}>
+        <div className="grades-card">
+          <div className="term-header">
+            <h3>What-If GPA Scenario</h3>
+            <div className="term-actions">
+              <button className="action-button primary" onClick={startWhatIfScenario} disabled={coursesWithGrades.length === 0}>
                 Copy Current Grades
-              </Button>
+              </button>
               {whatIfActive && (
-                <Button onClick={resetWhatIfScenario} color="secondary">
+                <button className="action-button secondary" onClick={resetWhatIfScenario}>
                   Clear Scenario
-                </Button>
+                </button>
               )}
             </div>
           </div>
 
           {whatIfActive ? (
             <>
-              <View as="div" margin="small 0 medium 0" className="gpa-summary">
-                <Text><strong>Unweighted GPA:</strong> {whatIfGPA.unweighted}</Text>
-                <Text><strong>Weighted GPA:</strong> {whatIfGPA.weighted}</Text>
-              </View>
-              <View as="div" className="course-type-hint">
+              <div className="gpa-summary" style={{ marginTop: "1rem" }}>
+                <div className="gpa-stat">
+                    <span className="gpa-stat-label">Unweighted GPA</span>
+                    <span className="gpa-stat-value">{whatIfGPA.unweighted}</span>
+                </div>
+                <div className="gpa-stat">
+                    <span className="gpa-stat-label">Weighted GPA</span>
+                    <span className="gpa-stat-value">{whatIfGPA.weighted}</span>
+                </div>
+              </div>
+              <div className="course-type-hint">
                 <Text size="small" color="secondary">
                   Adjust course types or grades below to see how weighted and unweighted GPAs shift.
                 </Text>
-              </View>
+              </div>
 
               {whatIfTermLabels.length > 0 && (
                 <div className="what-if-term-grades">
@@ -1189,7 +1227,7 @@ export default function GradesPage() {
                     const inputId = `whatif-term-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
                     return (
                       <div key={label} className="input-container">
-                        <label htmlFor={inputId}><Text>{label} Term Grade</Text></label>
+                        <label htmlFor={inputId}>{label} Term Grade</label>
                         <input
                           id={inputId}
                           type="text"
@@ -1202,7 +1240,7 @@ export default function GradesPage() {
                 </div>
               )}
 
-              <Table caption="What-If Courses" margin="medium 0 0 0">
+              <Table caption="What-If Courses">
                 <Table.Head>
                   <Table.Row>
                     <Table.ColHeader id="whatif-term">Term</Table.ColHeader>
@@ -1260,9 +1298,9 @@ export default function GradesPage() {
                         />
                       </Table.Cell>
                       <Table.Cell>
-                        <Button onClick={() => handleWhatIfCourseDelete(course.id)} size="small" color="danger">
+                        <button className="action-button danger" onClick={() => handleWhatIfCourseDelete(course.id)}>
                           Remove
-                        </Button>
+                        </button>
                       </Table.Cell>
                     </Table.Row>
                   ))}
@@ -1274,8 +1312,7 @@ export default function GradesPage() {
               Copy your current grades into a sandbox scenario to experiment with grade changes and instantly see updated weighted and unweighted GPAs.
             </Text>
           )}
-        </View>
-      </View>
+        </div>
     </div>
   );
 }
