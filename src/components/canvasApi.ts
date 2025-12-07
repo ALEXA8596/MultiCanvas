@@ -379,6 +379,7 @@ export type Assignment = {
   grading_type?: string | null;
   html_url?: string;
   submission_types?: string[];
+  allowed_extensions?: string[];
   has_submitted_submissions?: boolean;
   published?: boolean;
   course_id?: number;
