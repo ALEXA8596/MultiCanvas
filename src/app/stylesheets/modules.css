@@ -1,0 +1,134 @@
+.item-group-container {
+  background: #fff;
+  padding-bottom: 72px;
+  border: 0;
+}
+
+.item-group-condensed {
+  padding: 9px 0;
+}
+
+.item-group-condensed .ig-header {
+  margin-top: 15px;
+  background-color: #f2f4f4;
+  border: 1px solid #e8eaec;
+  padding: 12px 6px;
+  color: var(--ic-brand-font-color-dark);
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  cursor: pointer;
+}
+
+.ig-header .name {
+  color: #3d454c;
+  font-size: 1rem;
+  text-shadow: 1px 1px 0 rgba(255, 255, 255, .5);
+  font-weight: bold;
+}
+
+.ig-header .ig-header-title {
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: bold;
+  line-height: 20px;
+  margin: auto;
+  display: inline-block;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+}
+
+.ig-header .icon-mini-arrow-down {
+  margin-right: 8px;
+  transition: transform 0.2s;
+}
+
+.ig-header.collapsed .icon-mini-arrow-down {
+  transform: rotate(-90deg);
+}
+
+.ig-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.ig-list .ig-row {
+  position: relative;
+  padding: 12px 6px 12px 10px;
+  box-sizing: border-box;
+  color: #6c757c; /* var(--ic-brand-font-color-dark-lightened-15) */
+  border: 1px solid #e8eaec;
+  border-top-width: 0;
+  background: #fff;
+  display: flex;
+  align-items: center;
+}
+
+.ig-list .ig-row:hover {
+  background-color: #eef7ff;
+}
+
+.ig-list .ig-row a.ig-title {
+  color: #2d3b45; /* var(--ic-brand-font-color-dark) */
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 0.875rem;
+}
+
+.ig-list .ig-row a.ig-title:hover {
+  text-decoration: underline;
+  color: #008ee2; /* Link hover color */
+}
+
+.type_icon {
+  width: 1.875rem;
+  height: 1.875rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 8px;
+  color: #73818c;
+}
+
+.ig-info {
+  flex: 1;
+  min-width: 1px;
+  margin: 0 12px;
+}
+
+.module-item-title {
+  display: flex;
+  align-items: center;
+}
+
+.ig-details {
+  font-size: 0.75rem;
+  margin-top: 2px;
+  color: #6c757c;
+  display: flex;
+  gap: 10px;
+}
+
+.ig-details__item {
+  display: inline-block;
+}
+
+/* Indentation */
+.indent_0 { margin-left: 0; }
+.indent_1 { margin-left: 20px; }
+.indent_2 { margin-left: 40px; }
+.indent_3 { margin-left: 60px; }
+.indent_4 { margin-left: 80px; }
+
+/* Status icons */
+.module-item-status-icon {
+  width: 16px;
+  padding-right: 10px;
+}
+
+.context_module_item {
+    margin: 0;
+}
