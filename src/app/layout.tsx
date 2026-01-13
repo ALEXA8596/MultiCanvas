@@ -1,5 +1,4 @@
 "use client";
-import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./stylesheets/modern-pages.css";
 import "./stylesheets/components.css";
@@ -38,11 +37,6 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
-
-const metadata: Metadata = {
-  title: "Canvas MultiInstance",
-  description: "Merge multiple Canvas instances into one app",
-};
 
 const NAV_ITEMS = [
   { label: "Account", icon: faUser, href: "/accounts" },
