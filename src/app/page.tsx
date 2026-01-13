@@ -14,7 +14,6 @@ import { Flex } from "@instructure/ui-flex";
 import { Heading } from "@instructure/ui-heading";
 import { Text } from "@instructure/ui-text";
 import { Link } from "@instructure/ui-link";
-import { Pill } from "@instructure/ui-pill";
 import { TextInput } from "@instructure/ui-text-input";
 import { NumberInput } from "@instructure/ui-number-input";
 import { Checkbox } from "@instructure/ui-checkbox";

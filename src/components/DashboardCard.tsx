@@ -222,7 +222,7 @@ export default function DashboardCardComponent({ card, setting, onOpenSettings }
                       transition: 'color var(--transition-fast)'
                     }}
                   >
-                    Open in School's Canvas
+                    Open in School&apos;s Canvas
                   </Link>
                 </Text>
                 {typeof setting?.credits === 'number' && (

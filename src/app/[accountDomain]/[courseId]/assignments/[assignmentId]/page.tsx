@@ -16,7 +16,7 @@ export default function AssignmentDetailPage() {
 
   const [account, setAccount] = useState<Account | null>(null);
   const [assignment, setAssignment] = useState<Assignment | null>(null);
-  const [overrides, setOverrides] = useState<AssignmentOverride[]>([]);
+  const [, setOverrides] = useState<AssignmentOverride[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);

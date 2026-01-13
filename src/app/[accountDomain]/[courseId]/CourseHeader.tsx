@@ -110,7 +110,7 @@ export default function CourseHeader() {
   }
 
   const officialName = courseSetting?.courseName || course?.name || "";
-  const { displayName, subtitle } = getCourseDisplay({
+  const { displayName } = getCourseDisplay({
     actualName: officialName,
     nickname: courseSetting?.nickname,
     fallback: officialName || "Course",

@@ -16,8 +16,6 @@ import {
   fetchAnnouncements,
   fetchDiscussionTopics,
   fetchCourseFiles,
-  AssignmentGroup,
-  Assignment,
 } from "@/components/canvasApi";
 import { getCourseSettingId } from "@/lib/db";
 import { getCourseDisplay } from "@/lib/courseDisplay";
@@ -311,7 +309,7 @@ export default function DownloadExportPage() {
                <div class="description user_content">${pageDetails.body || ''}</div>
              `;
              zip.file(`${courseDir}/pages/${p.url}.html`, generateHtmlShell(`${pageDetails.title} - ${displayName}`, pageContent, 3, generateCourseNav(course.id, 'pages', 1)));
-           } catch (e) {
+           } catch {
              const pageContent = `
                <div class="course-header"><h1>${p.title}</h1></div>
                <div class="description user_content">

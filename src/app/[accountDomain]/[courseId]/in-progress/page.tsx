@@ -1,12 +1,11 @@
 "use client";
-import { useParams, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { Heading } from "@instructure/ui-heading";
 import { Text } from "@instructure/ui-text";
 import { Link } from "@instructure/ui-link";
 
 function InProgressContent() {
-  const params = useParams();
   const searchParams = useSearchParams();
   
   const tabId = searchParams?.get("tab") || "unknown";

@@ -4,8 +4,6 @@ import { useParams } from "next/navigation";
 import { View } from "@instructure/ui-view";
 import { Heading } from "@instructure/ui-heading";
 import { Text } from "@instructure/ui-text";
-import { Link } from "@instructure/ui-link";
-import { Flex } from "@instructure/ui-flex";
 import { Account, DiscussionTopic, fetchCourseAnnouncements } from "../../../../components/canvasApi";
 import "../../../stylesheets/announcements.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";

@@ -167,6 +167,7 @@ export default function GradesPage() {
       try { setAccounts(JSON.parse(saved)); } catch { /* ignore */ }
     }
     loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function loadData() {
@@ -761,7 +762,7 @@ export default function GradesPage() {
           {!selectedProfile && gpaProfiles.length === 0 && (
             <div className="empty-state">
               <Heading level="h3">Create Your First GPA Profile</Heading>
-              <Text>Click "New Profile" to set up a custom GPA calculation with your preferred weights and grade levels.</Text>
+              <Text>Click &ldquo;New Profile&rdquo; to set up a custom GPA calculation with your preferred weights and grade levels.</Text>
             </div>
           )}
         </div>

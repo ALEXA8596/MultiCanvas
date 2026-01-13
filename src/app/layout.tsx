@@ -7,7 +7,6 @@ import "./stylesheets/canvas-nav.css";
 import "./globals.css";
 
 import { View } from "@instructure/ui-view";
-import { Flex } from "@instructure/ui-flex";
 import Link from "next/link";
 import { Heading } from "@instructure/ui-heading";
 import { Text } from "@instructure/ui-text";
@@ -109,7 +108,6 @@ export default function RootLayout({
   }, []);
 
   const hasAccounts = accounts.length > 0;
-  const appTitle = typeof metadata.title === "string" ? metadata.title : "MultiCanvas";
   const isNavItemActive = useCallback(
     (href: string) => {
       if (!href) return false;

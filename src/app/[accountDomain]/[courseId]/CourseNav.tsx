@@ -61,7 +61,7 @@ export default function CourseNav({ accountDomain, courseId, account }: CourseNa
   const pathname = usePathname();
   const base = `/${accountDomain}/${courseId}`;
   const [tabs, setTabs] = useState<CourseTab[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
 
   useEffect(() => {
     if (!account) {
