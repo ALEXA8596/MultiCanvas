@@ -32,6 +32,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { ThemeProvider } from "../components/ThemeProvider";
 import { ThemeToggle } from "../components/ThemeToggle";
+import { DevTools } from "../components/DevTools";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({
@@ -120,6 +121,9 @@ export default function RootLayout({
 
   return (
     <html lang="en">
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, viewport-fit=cover" />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} ${navExpanded ? 'primary-nav-expanded' : ''}`}>
         <ThemeProvider>
           <header id="header" className="ic-app-header no-print" aria-label="Global Header">
@@ -275,6 +279,7 @@ export default function RootLayout({
               <div style={{ padding: "2rem" }}>{children}</div>
             </View>
           </View>
+          <DevTools />
         </ThemeProvider>
       </body>
     </html>

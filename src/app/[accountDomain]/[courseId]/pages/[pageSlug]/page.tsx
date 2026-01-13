@@ -48,7 +48,7 @@ export default function CoursePageDetail() {
   return (
     <View as="div" padding="medium" width="100%">
       <CourseHeader />
-      <CourseNav accountDomain={accountDomain} courseId={courseId} />
+      <CourseNav accountDomain={accountDomain} courseId={courseId} account={account} />
       {loading && <Text>Loading page...</Text>}
       {!loading && error && <Text color="danger">{error}</Text>}
       {!loading && !error && !page && <Text>Page not found.</Text>}

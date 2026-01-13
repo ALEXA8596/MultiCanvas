@@ -7,8 +7,6 @@ import { Text } from "@instructure/ui-text";
 import { Flex } from "@instructure/ui-flex";
 import { Link } from "@instructure/ui-link";
 import { Account, AssignmentGroup, fetchAssignmentGroups } from "../../../../components/canvasApi";
-import CourseNav from "../CourseNav";
-import CourseHeader from "../CourseHeader";
 import { Button } from "@instructure/ui-buttons";
 
 export default function AssignmentsListPage() {
@@ -68,8 +66,6 @@ export default function AssignmentsListPage() {
 
   return (
     <View as="div" padding="medium" width="100%">
-      <CourseHeader />
-      <CourseNav accountDomain={accountDomain} courseId={courseId} />
       <Flex justifyItems="space-between" alignItems="center" margin="0 0 small">
         <Heading level="h3" margin="0">Assignments</Heading>
         <Flex gap="small">

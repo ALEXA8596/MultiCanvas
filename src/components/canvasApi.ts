@@ -49,6 +49,7 @@ export type CanvasCourse = {
   hide_final_grades: boolean;
   workflow_state: string; // e.g. "available"
   restrict_enrollments_to_course_dates: boolean;
+  syllabus_body?: string | null; // HTML content of the syllabus
 };
 
 export type Grades = {
@@ -465,6 +466,7 @@ export type ModuleItem = {
   type: string; // e.g. 'Assignment', 'Discussion', 'File', 'Page'
   html_url?: string;
   content_id?: number;
+  page_url?: string; // slug for Page items (e.g. "my-page-title")
   position?: number;
   indent?: number;
   published?: boolean;
@@ -524,17 +526,147 @@ export async function fetchCoursePage(account: Account, courseId: number, pageSl
   return res.json();
 }
 
+export async function fetchCourseFrontPage(account: Account, courseId: number): Promise<WikiPage> {
+  const path = `courses/${courseId}/front_page`;
+  const res = await canvasFetch(account, path);
+  if (!res.ok) throw new Error(`Failed to fetch front page for course ${courseId} (${account.domain})`);
+  return res.json();
+}
+
+// ============ Course Tabs API ============
+export type CourseTab = {
+  id: string;
+  html_url: string;
+  full_url?: string; // We'll add this to include the full Canvas URL
+  label: string;
+  type: "internal" | "external";
+  hidden?: boolean;
+  visibility: "public" | "members" | "admins" | "none";
+  position: number;
+};
+
+export async function fetchCourseTabs(account: Account, courseId: number): Promise<CourseTab[]> {
+  const path = `courses/${courseId}/tabs`;
+  const res = await canvasFetch(account, path);
+  if (!res.ok) throw new Error(`Failed to fetch tabs for course ${courseId} (${account.domain})`);
+  const tabs: CourseTab[] = await res.json();
+  // Add full Canvas URL for each tab
+  return tabs.map(tab => ({
+    ...tab,
+    full_url: `https://${account.domain}${tab.html_url}`
+  }));
+}
+
+// ============ API Logging for Developer Mode ============
+export type ApiLogEntry = {
+  id: string;
+  timestamp: number;
+  method: string;
+  url: string;
+  path: string;
+  domain: string;
+  status: number;
+  duration: number;
+  requestBody?: any;
+  responseBody?: any;
+};
+
+let apiLogs: ApiLogEntry[] = [];
+let logSubscribers: ((logs: ApiLogEntry[]) => void)[] = [];
+const MAX_LOGS = 100;
+
+export function getApiLogs(): ApiLogEntry[] {
+  return [...apiLogs];
+}
+
+export function clearApiLogs(): void {
+  apiLogs = [];
+  notifySubscribers();
+}
+
+export function subscribeToApiLogs(callback: (logs: ApiLogEntry[]) => void): () => void {
+  logSubscribers.push(callback);
+  return () => {
+    logSubscribers = logSubscribers.filter((cb) => cb !== callback);
+  };
+}
+
+function notifySubscribers() {
+  logSubscribers.forEach((cb) => cb([...apiLogs]));
+}
+
+function addApiLog(entry: ApiLogEntry) {
+  apiLogs = [entry, ...apiLogs].slice(0, MAX_LOGS);
+  notifySubscribers();
+}
+
+function isDevModeEnabled(): boolean {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem("devMode") === "true";
+}
+
 // Shared helper for Canvas API fetches using Authorization header
 async function canvasFetch(account: Account, path: string, init?: RequestInit) {
   const url = `/api/canvas?domain=${encodeURIComponent(account.domain)}&path=${encodeURIComponent(path)}`;
-  return fetch(url, {
-    method: init?.method || 'GET',
+  const method = init?.method || 'GET';
+  const startTime = Date.now();
+  
+  const response = await fetch(url, {
+    method,
     body: init?.body,
     headers: {
       Authorization: `Bearer ${account.apiKey}`,
       ...(init?.headers || {})
     }
   });
+
+  // Log the request if dev mode is enabled
+  if (isDevModeEnabled()) {
+    const duration = Date.now() - startTime;
+    
+    // Clone the response to read the body without consuming it
+    const clonedResponse = response.clone();
+    let responseBody: any = null;
+    
+    try {
+      const text = await clonedResponse.text();
+      try {
+        responseBody = JSON.parse(text);
+      } catch {
+        responseBody = text;
+      }
+    } catch {
+      responseBody = "(Could not read response)";
+    }
+    
+    const logEntry: ApiLogEntry = {
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      timestamp: startTime,
+      method,
+      url,
+      path,
+      domain: account.domain,
+      status: response.status,
+      duration,
+      requestBody: init?.body ? tryParseJson(init.body) : undefined,
+      responseBody,
+    };
+    
+    addApiLog(logEntry);
+  }
+
+  return response;
+}
+
+function tryParseJson(body: any): any {
+  if (typeof body === "string") {
+    try {
+      return JSON.parse(body);
+    } catch {
+      return body;
+    }
+  }
+  return body;
 }
 
 export async function fetchAnnouncements(account: Account, courseId: number): Promise<Announcement[]> {

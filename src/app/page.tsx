@@ -453,9 +453,9 @@ export default function Home() {
 
             <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               <TextInput
-                renderLabel="Course display name"
+                renderLabel="Course name (from Canvas)"
                 value={settingsModal.draft.courseName || ""}
-                onChange={(_, value) => handleDraftChange({ courseName: value })}
+                interaction="readonly"
               />
               <TextInput
                 renderLabel="Nickname"

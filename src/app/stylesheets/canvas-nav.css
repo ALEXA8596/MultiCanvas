@@ -169,3 +169,137 @@ body:not(.primary-nav-expanded) .layout-shell {
 .nav-modern {
     display: none !important;
 }
+
+/* Mobile Navigation - Bottom bar on small screens */
+@media (max-width: 768px) {
+  /* Convert sidebar to bottom navigation on mobile */
+  .ic-app-header {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100% !important;
+    height: auto;
+    flex-direction: row;
+    z-index: 1000;
+    padding: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  body.primary-nav-expanded .ic-app-header,
+  body:not(.primary-nav-expanded) .ic-app-header {
+    width: 100% !important;
+  }
+
+  .ic-app-header__main-navigation {
+    flex-direction: row;
+    flex: 1;
+    overflow: visible;
+  }
+
+  .ic-app-header__logomark-container {
+    display: none;
+  }
+
+  .ic-app-header__menu-list {
+    flex-direction: row;
+    justify-content: space-around;
+    width: 100%;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+
+  .ic-app-header__menu-list-item {
+    flex: 0 0 auto;
+    min-width: 60px;
+  }
+
+  .ic-app-header__menu-list-link {
+    padding: 0.5rem 0.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .menu-item-icon-container {
+    height: auto;
+    margin-bottom: 2px;
+  }
+
+  .ic-icon-svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .menu-item__text {
+    font-size: 0.625rem;
+    opacity: 1 !important;
+    position: static !important;
+    transform: none !important;
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  body:not(.primary-nav-expanded) .menu-item__text {
+    opacity: 1;
+    position: static;
+    transform: none;
+    background: transparent;
+    padding: 0;
+    margin-top: 2px;
+  }
+
+  .ic-app-header__secondary-navigation {
+    display: none;
+  }
+
+  /* Adjust main layout for bottom nav */
+  .layout-shell {
+    margin-left: 0 !important;
+    margin-bottom: 60px;
+    width: 100% !important;
+  }
+
+  body.primary-nav-expanded .layout-shell,
+  body:not(.primary-nav-expanded) .layout-shell {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Course tray adjustments */
+  #nav-tray-portal {
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 60px !important;
+    top: auto !important;
+    height: 60vh !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 16px 16px 0 0;
+    border-right: none !important;
+    border-top: 1px solid var(--border) !important;
+  }
+}
+
+/* Small mobile adjustments */
+@media (max-width: 480px) {
+  .ic-app-header__menu-list-item {
+    min-width: 50px;
+  }
+
+  .menu-item__text {
+    font-size: 0.5625rem;
+  }
+
+  .ic-icon-svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .layout-shell__main > div {
+    padding: 1rem !important;
+  }
+}

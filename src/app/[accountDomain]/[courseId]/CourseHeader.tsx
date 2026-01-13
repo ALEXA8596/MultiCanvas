@@ -5,6 +5,7 @@ import { Heading } from "@instructure/ui-heading";
 import { Text } from "@instructure/ui-text";
 import { Account, CanvasCourse, fetchCourse } from "@/components/canvasApi";
 import { CourseSetting, getCourseSetting, getCourseSettingId } from "@/lib/db";
+import { getCourseDisplay } from "@/lib/courseDisplay";
 
 export default function CourseHeader() {
   const params = useParams();
@@ -108,6 +109,18 @@ export default function CourseHeader() {
     );
   }
 
+  const officialName = courseSetting?.courseName || course?.name || "";
+  const { displayName, subtitle } = getCourseDisplay({
+    actualName: officialName,
+    nickname: courseSetting?.nickname,
+    fallback: officialName || "Course",
+    maxSubtitleLength: 50,
+  });
+
+  // Show subtitle only if nickname is set and differs from official name
+  const showOfficialName = courseSetting?.nickname?.trim() && 
+    courseSetting.nickname.trim() !== officialName.trim();
+
   return (
     <div className="fade-in" style={{
       padding: '2rem',
@@ -121,15 +134,18 @@ export default function CourseHeader() {
         fontSize: '2rem',
         fontWeight: '700'
       }}>
-        {(courseSetting?.nickname && courseSetting.nickname.trim().length > 0
-          ? courseSetting.nickname.trim()
-          : courseSetting?.courseName || course?.name) || "Course"}
+        {displayName}
       </Heading>
       <div style={{
         display: 'flex',
         flexDirection: 'column',
         gap: '0.25rem'
       }}>
+        {showOfficialName && (
+          <Text size="medium" style={{ color: 'rgba(255, 255, 255, 0.9)', fontStyle: 'italic' }}>
+            {officialName}
+          </Text>
+        )}
         {(courseSetting?.courseCode || course?.course_code) && (
           <Text size="large" style={{ color: 'rgba(255, 255, 255, 0.95)', fontWeight: '500' }}>
             {courseSetting?.courseCode || course?.course_code}

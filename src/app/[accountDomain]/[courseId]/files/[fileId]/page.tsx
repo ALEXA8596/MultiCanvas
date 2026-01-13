@@ -6,8 +6,6 @@ import { Heading } from '@instructure/ui-heading';
 import { Text } from '@instructure/ui-text';
 import { Link } from '@instructure/ui-link';
 import Image from 'next/image';
-import CourseNav from '../../CourseNav';
-import CourseHeader from '../../CourseHeader';
 import { Account, CanvasFile, fetchCourseFile } from '../../../../../components/canvasApi';
 
 export default function FileDetailPage() {
@@ -100,8 +98,6 @@ export default function FileDetailPage() {
 
 	return (
 		<View as="div" padding="medium" width="100%">
-			<CourseHeader />
-			<CourseNav accountDomain={accountDomain} courseId={courseId} />
 			<Heading level="h3" margin="0 0 medium">File</Heading>
 			{loading && <Text>Loading file...</Text>}
 			{!loading && error && <Text color="danger">{error}</Text>}

@@ -5,8 +5,6 @@ import { View } from "@instructure/ui-view";
 import { Heading } from "@instructure/ui-heading";
 import { Text } from "@instructure/ui-text";
 import { Link } from "@instructure/ui-link";
-import CourseNav from "../CourseNav";
-import CourseHeader from "../CourseHeader";
 import {
   Account,
   CanvasFile,
@@ -79,8 +77,6 @@ export default function CourseFilesPage() {
 
   return (
     <View as="div" padding="medium" width="100%">
-      <CourseHeader />
-      <CourseNav accountDomain={accountDomain} courseId={courseId} />
       <Heading level="h3" margin="0 0 medium">
         Files
       </Heading>

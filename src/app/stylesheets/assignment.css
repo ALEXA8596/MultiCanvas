@@ -4,7 +4,7 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
-  border-bottom: 1px solid #C7CDD1;
+  border-bottom: 1px solid var(--border);
   padding-bottom: 1rem;
 }
 
@@ -12,13 +12,13 @@
   font-size: 1.5rem;
   font-weight: normal;
   margin: 0;
-  color: #2D3B45;
+  color: var(--foreground);
 }
 
 .assignment-buttons .btn-primary {
-  background-color: #008EE2;
+  background-color: var(--primary);
   color: white;
-  border: 1px solid #008EE2;
+  border: 1px solid var(--primary);
   padding: 8px 14px;
   border-radius: 3px;
   cursor: pointer;
@@ -27,14 +27,14 @@
 }
 
 .assignment-buttons .btn-primary:hover {
-  background-color: #0074B8;
+  background-color: var(--primary-hover);
 }
 
 .student-assignment-overview {
   list-style: none;
   padding: 0;
   margin: 0 0 1.5rem 0;
-  border-bottom: 1px solid #C7CDD1;
+  border-bottom: 1px solid var(--border);
   display: flex;
   flex-wrap: wrap;
 }
@@ -48,35 +48,36 @@
   display: block;
   font-weight: bold;
   font-size: 0.875rem;
-  color: #2D3B45;
+  color: var(--foreground);
   margin-bottom: 0.25rem;
 }
 
 .student-assignment-overview .value {
   display: block;
   font-size: 0.875rem;
-  color: #2D3B45;
+  color: var(--foreground);
 }
 
 .description.user_content {
   font-size: 1rem;
   line-height: 1.5;
-  color: #2D3B45;
+  color: var(--foreground);
   margin-bottom: 2rem;
 }
 
 /* Rubric Styles */
 .rubric_container {
   margin-top: 2rem;
-  border: 1px solid #C7CDD1;
+  border: 1px solid var(--border);
   border-radius: 3px;
 }
 
 .rubric_title {
-  background-color: #F5F5F5;
+  background-color: var(--surface-elevated);
   padding: 10px;
-  border-bottom: 1px solid #C7CDD1;
+  border-bottom: 1px solid var(--border);
   font-weight: bold;
+  color: var(--foreground);
 }
 
 .rubric_table {
@@ -85,28 +86,30 @@
 }
 
 .rubric_table th {
-  background-color: #F5F5F5;
+  background-color: var(--surface-elevated);
   padding: 10px;
   text-align: left;
-  border-bottom: 1px solid #C7CDD1;
+  border-bottom: 1px solid var(--border);
   font-weight: bold;
   font-size: 0.875rem;
+  color: var(--foreground);
 }
 
 .rubric_table td {
   padding: 10px;
-  border-bottom: 1px solid #C7CDD1;
+  border-bottom: 1px solid var(--border);
   vertical-align: top;
+  color: var(--foreground);
 }
 
 .rubric_table .criterion_description {
   width: 30%;
-  border-right: 1px solid #C7CDD1;
+  border-right: 1px solid var(--border);
 }
 
 .rubric_table .ratings {
   width: 50%;
-  border-right: 1px solid #C7CDD1;
+  border-right: 1px solid var(--border);
 }
 
 .rubric_table .points_form {
@@ -128,4 +131,120 @@
 
 .rubric_table .points {
   font-weight: bold;
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  .assignment-title {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .assignment-title .title {
+    font-size: 1.25rem;
+  }
+
+  .assignment-buttons .btn-primary {
+    padding: 10px 16px;
+    font-size: 0.9rem;
+    width: 100%;
+    text-align: center;
+  }
+
+  .student-assignment-overview {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .student-assignment-overview li {
+    margin-right: 0;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .student-assignment-overview li:last-child {
+    border-bottom: none;
+  }
+
+  .description.user_content {
+    font-size: 0.9rem;
+  }
+
+  /* Rubric mobile layout */
+  .rubric_table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .rubric_table thead,
+  .rubric_table tbody,
+  .rubric_table th,
+  .rubric_table td,
+  .rubric_table tr {
+    display: block;
+  }
+
+  .rubric_table thead {
+    display: none;
+  }
+
+  .rubric_table tr {
+    margin-bottom: 1rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .rubric_table td {
+    display: flex;
+    flex-direction: column;
+    width: 100% !important;
+    border-right: none;
+    padding: 8px;
+  }
+
+  .rubric_table td::before {
+    content: attr(data-label);
+    font-weight: bold;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
+  .rubric_table .criterion_description,
+  .rubric_table .ratings,
+  .rubric_table .points_form {
+    width: 100%;
+    text-align: left;
+    border-right: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .assignment-title .title {
+    font-size: 1.1rem;
+  }
+
+  .student-assignment-overview .title,
+  .student-assignment-overview .value {
+    font-size: 0.8rem;
+  }
+
+  .description.user_content {
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+
+  .rubric_title {
+    font-size: 0.9rem;
+    padding: 8px;
+  }
+
+  .rubric_table td {
+    padding: 6px;
+    font-size: 0.8rem;
+  }
 }

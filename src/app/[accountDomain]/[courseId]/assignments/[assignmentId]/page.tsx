@@ -1,8 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import CourseNav from "../../CourseNav";
-import CourseHeader from "../../CourseHeader";
 import { Account, Assignment, AssignmentOverride, fetchAssignment, fetchAssignmentOverrides, uploadAssignmentFile, submitAssignmentFiles, UploadedFile } from "../../../../../components/canvasApi";
 import "../../../../stylesheets/assignment.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -66,10 +64,7 @@ export default function AssignmentDetailPage() {
 
   return (
     <div className="ic-Layout-wrapper">
-      <CourseHeader />
-      <div className="ic-Layout-columns">
-        <CourseNav accountDomain={accountDomain} courseId={courseId} />
-        <div className="ic-Layout-contentMain">
+      <div className="ic-Layout-contentMain">
           {loading && <div>Loading assignment...</div>}
           {!loading && error && <div style={{ color: 'red' }}>{error}</div>}
           {!loading && !error && assignment && (
@@ -225,7 +220,6 @@ export default function AssignmentDetailPage() {
           )}
         </div>
       </div>
-    </div>
   );
 }
 

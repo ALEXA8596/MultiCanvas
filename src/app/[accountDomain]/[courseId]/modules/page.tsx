@@ -4,8 +4,6 @@ import { useParams } from "next/navigation";
 import { View } from "@instructure/ui-view";
 import { Heading } from "@instructure/ui-heading";
 import { Text } from "@instructure/ui-text";
-import CourseNav from "../CourseNav";
-import CourseHeader from "../CourseHeader";
 import { Account, CourseModule, ModuleItem, fetchCourseModules } from "../../../../components/canvasApi";
 import "../../../stylesheets/modules.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -57,16 +55,25 @@ export default function ModulesPage() {
 
   const internalLinkForItem = (item: ModuleItem): string | null => {
     const type = item.type?.toLowerCase();
+    
+    // Pages use url/slug instead of content_id
+    if (type === 'page') {
+      // Module items for pages have page_url (slug) directly
+      if (item.page_url) return `./pages/${encodeURIComponent(item.page_url)}`;
+      
+      // Fallback: extract slug from html_url like /courses/:course_id/pages/:slug
+      if (item.html_url) {
+        const slugMatch = item.html_url.match(/\/pages\/(.+)$/);
+        if (slugMatch) return `./pages/${encodeURIComponent(slugMatch[1])}`;
+      }
+      return null;
+    }
+    
     if (!item.content_id && type !== 'external_url') return null;
     
     // Use relative navigation for assignments & files (one level up from /modules)
     if (type === 'assignment') return `./assignments/${item.content_id}`;
     if (type === 'discussion') return `./discussions/${item.content_id}`;
-    if (type === 'page' && item.html_url) {
-      // html_url like /courses/:course_id/pages/:slug
-      const slugMatch = item.html_url.match(/\/pages\/(.+)$/);
-      if (slugMatch) return `./pages/${slugMatch[1]}`;
-    }
     if (type === 'file') return `./files/${item.content_id}`;
     if (type === 'external_url') return (item as any).external_url || null;
     
@@ -92,9 +99,6 @@ export default function ModulesPage() {
 
   return (
     <View as="div" padding="medium" width="100%">
-      <CourseHeader />
-      <CourseNav accountDomain={accountDomain} courseId={courseId} />
-      
       <div style={{ padding: "0 20px" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
             <Heading level="h2" margin="0">Modules</Heading>
@@ -105,7 +109,7 @@ export default function ModulesPage() {
                     modules.forEach(m => newState[m.id] = !allCollapsed);
                     setCollapsedModules(newState);
                 }}
-                style={{ background: "none", border: "1px solid #ccc", padding: "5px 10px", cursor: "pointer", borderRadius: "3px" }}
+                style={{ background: "var(--surface-elevated)", border: "1px solid var(--border)", padding: "5px 10px", cursor: "pointer", borderRadius: "3px", color: "var(--foreground)" }}
             >
                 {modules.every(m => collapsedModules[m.id]) ? "Expand All" : "Collapse All"}
             </button>
@@ -143,7 +147,7 @@ export default function ModulesPage() {
                                             <div className="ig-row" style={{ background: "transparent", border: "none", paddingLeft: "10px" }}>
                                                 <div className="ig-info">
                                                     <div className="module-item-title">
-                                                        <span className="item_name" style={{ fontWeight: "bold", color: "#666" }}>
+                                                        <span className="item_name" style={{ fontWeight: "bold", color: "var(--text-muted)" }}>
                                                             {it.title}
                                                         </span>
                                                     </div>
@@ -167,7 +171,7 @@ export default function ModulesPage() {
                                                                 {it.title}
                                                             </a>
                                                         ) : (
-                                                            <span className="ig-title" style={{ color: "#666" }}>{it.title}</span>
+                                                            <span className="ig-title" style={{ color: "var(--text-muted)" }}>{it.title}</span>
                                                         )}
                                                     </span>
                                                 </div>

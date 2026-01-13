@@ -451,11 +451,110 @@
 }
 
 .todo-sidebar ul > li { background:#fff; }
+
+/* Mobile Responsive Styles */
 @media (max-width: 900px) {
   .todo-sidebar {
-    width: 100%;
+    width: 100% !important;
     position: relative;
     top: auto;
     margin-top: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .todo-sidebar {
+    width: 100% !important;
+    border-radius: var(--radius-md);
+  }
+
+  .todo-progress-ring {
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .todo-section {
+    padding: 0.5rem;
+  }
+
+  .todo-tabs {
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    padding: 0.5rem;
+  }
+
+  .todo-tabs button {
+    flex: 1 1 auto;
+    min-width: calc(50% - 0.25rem);
+    padding: 0.625rem 0.75rem;
+    font-size: 0.75rem;
+  }
+
+  .todo-interval-controls {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+
+  .interval-nav-btn {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .todo-domain-filters {
+    gap: 0.25rem;
+  }
+
+  .todo-domain-filters button {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.7rem;
+  }
+
+  .todo-item {
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .todo-item-title {
+    font-size: 0.85rem;
+  }
+
+  .todo-item-meta {
+    font-size: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .todo-links {
+    gap: 0.5rem;
+  }
+
+  .todo-links a {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.4rem;
+  }
+
+  .todo-option-group {
+    padding: 0.5rem;
+  }
+
+  .collapsible-header {
+    padding: 0.375rem 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .todo-tabs button {
+    min-width: 100%;
+    padding: 0.5rem;
+  }
+
+  .todo-progress-ring svg {
+    max-width: 120px;
+    max-height: 120px;
+  }
+
+  .todo-search input {
+    padding: 0.625rem 0.75rem;
+    font-size: 0.8rem;
   }
 }

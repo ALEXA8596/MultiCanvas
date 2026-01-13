@@ -57,6 +57,10 @@ interface MyDB extends DBSchema {
     value: TermCourse;
     indexes: { 'by-term': number };
   };
+  'gpa-profiles': {
+    key: number;
+    value: GpaProfile;
+  };
 }
 
 const isBrowser = typeof window !== 'undefined' && typeof indexedDB !== 'undefined';
@@ -74,7 +78,7 @@ export function parseCourseSettingId(id: string) {
 }
 
 const dbPromise: Promise<IDBPDatabase<MyDB>> | null = isBrowser
-  ? openDB<MyDB>('multi-canvas-db', 2, {
+  ? openDB<MyDB>('multi-canvas-db', 3, {
       upgrade(db, oldVersion) {
         if (oldVersion < 1) {
           db.createObjectStore('course-settings', { keyPath: 'id' });
@@ -96,6 +100,12 @@ const dbPromise: Promise<IDBPDatabase<MyDB>> | null = isBrowser
             autoIncrement: true,
           });
           termCoursesStore.createIndex('by-term', 'termId');
+        }
+        if (oldVersion < 3) {
+          db.createObjectStore('gpa-profiles', {
+            keyPath: 'id',
+            autoIncrement: true,
+          });
         }
       },
     })
@@ -228,4 +238,49 @@ export async function updateTermCourse(course: TermCourse) {
 
 export async function deleteTermCourse(id: number) {
   return (await requireDb()).delete('term-courses', id);
+}
+
+// --- GPA Profiles ---
+export interface GpaProfile {
+  id?: number;
+  name: string;
+  description?: string;
+  includedGradeLevels: number[]; // e.g., [10, 11] for UC GPA
+  weights: {
+    regular: number;
+    academic: number;
+    accelerated: number;
+    honors: number;
+    ap: number;
+    ib: number;
+    dualEnrollment: number;
+    concurrentEnrollment: number;
+  };
+  caps: {
+    perGradeLevel: Record<string, number | null>; // e.g., { "10": 4, "11": null }
+    total: number | null; // null = unlimited
+  };
+  isDefault?: boolean;
+  createdAt?: number;
+}
+
+export async function getGpaProfiles(): Promise<GpaProfile[]> {
+  if (!isBrowser) return [];
+  const db = await requireDb();
+  return db.getAll('gpa-profiles');
+}
+
+export async function addGpaProfile(profile: GpaProfile): Promise<number> {
+  const db = await requireDb();
+  return db.add('gpa-profiles', { ...profile, createdAt: Date.now() });
+}
+
+export async function updateGpaProfile(profile: GpaProfile): Promise<void> {
+  const db = await requireDb();
+  await db.put('gpa-profiles', profile);
+}
+
+export async function deleteGpaProfile(id: number): Promise<void> {
+  const db = await requireDb();
+  await db.delete('gpa-profiles', id);
 }

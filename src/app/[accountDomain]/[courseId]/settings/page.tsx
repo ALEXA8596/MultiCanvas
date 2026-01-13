@@ -206,7 +206,7 @@ export default function CourseSettingsPage() {
   return (
     <View as="div" padding="medium" width="100%">
       <CourseHeader />
-      <CourseNav accountDomain={accountDomain} courseId={courseId} />
+      <CourseNav accountDomain={accountDomain} courseId={courseId} account={account} />
 
       <div className="modern-card" style={{ padding: "1.5rem" }}>
         <Heading level="h3" margin="0 0 medium" style={{ color: "var(--foreground)" }}>
@@ -228,9 +228,9 @@ export default function CourseSettingsPage() {
         {!loading && !error && draft && normalizedDraft && (
           <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
             <TextInput
-              renderLabel="Course display name"
+              renderLabel="Course name (from Canvas)"
               value={draft.courseName || ""}
-              onChange={(_, value) => handleDraftChange({ courseName: value })}
+              interaction="readonly"
             />
             <TextInput
               renderLabel="Nickname"

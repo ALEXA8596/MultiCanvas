@@ -5,8 +5,6 @@ import { View } from "@instructure/ui-view";
 import { Heading } from "@instructure/ui-heading";
 import { Text } from "@instructure/ui-text";
 import { Link } from "@instructure/ui-link";
-import CourseNav from "../../CourseNav";
-import CourseHeader from "../../CourseHeader";
 import { Account, DiscussionTopic, fetchDiscussionTopic } from "../../../../../components/canvasApi";
 
 export default function DiscussionDetailPage() {
@@ -48,8 +46,6 @@ export default function DiscussionDetailPage() {
 
   return (
     <View as="div" padding="medium" width="100%">
-      <CourseHeader />
-      <CourseNav accountDomain={accountDomain} courseId={courseId} />
       <Heading level="h3" margin="0 0 medium">Discussion</Heading>
       {loading && <Text>Loading discussion...</Text>}
       {!loading && error && <Text color="danger">{error}</Text>}

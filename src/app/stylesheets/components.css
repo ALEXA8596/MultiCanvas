@@ -504,3 +504,164 @@
     transform: none;
   }
 }
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+  /* Forms */
+  .modern-form {
+    padding: 1.25rem;
+  }
+
+  .modern-form .form-group {
+    margin-bottom: 1rem;
+  }
+
+  /* Tables - horizontal scroll */
+  .modern-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .modern-table th,
+  .modern-table td {
+    padding: 0.75rem;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+
+  /* Assignment cards */
+  .assignment-card {
+    padding: 1rem;
+  }
+
+  .assignment-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .assignment-card-title {
+    font-size: 1rem;
+  }
+
+  /* Discussion cards */
+  .discussion-card {
+    padding: 1rem;
+  }
+
+  .discussion-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .discussion-card-title {
+    font-size: 1rem;
+  }
+
+  /* Announcement cards */
+  .announcement-card {
+    padding: 1rem;
+  }
+
+  .announcement-card-header {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .announcement-card-title {
+    font-size: 1rem;
+  }
+
+  /* File browser */
+  .file-browser-item {
+    padding: 0.75rem;
+  }
+
+  .file-browser-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-right: 0.75rem;
+  }
+
+  .file-browser-name {
+    font-size: 0.9rem;
+  }
+
+  .file-browser-size {
+    font-size: 0.75rem;
+  }
+
+  /* Breadcrumbs */
+  .breadcrumb {
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .breadcrumb-item {
+    font-size: 0.8rem;
+  }
+
+  /* Modals */
+  .modern-modal-content {
+    padding: 1.25rem;
+    margin: 0.5rem;
+    max-height: calc(100vh - 1rem);
+    border-radius: var(--radius-md);
+  }
+
+  .modern-modal-title {
+    font-size: 1.25rem;
+  }
+
+  /* Notifications */
+  .notification {
+    top: 1rem;
+    right: 1rem;
+    left: 1rem;
+    max-width: none;
+    padding: 0.75rem 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .modern-form {
+    padding: 1rem;
+  }
+
+  .modern-form input,
+  .modern-form textarea,
+  .modern-form select {
+    padding: 0.625rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .assignment-card,
+  .discussion-card,
+  .announcement-card {
+    padding: 0.75rem;
+    border-radius: var(--radius-md);
+  }
+
+  .assignment-card-title,
+  .discussion-card-title,
+  .announcement-card-title {
+    font-size: 0.9rem;
+  }
+
+  .modern-modal-content {
+    padding: 1rem;
+    border-radius: var(--radius-sm);
+  }
+
+  .modern-modal-header {
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .modern-modal-title {
+    font-size: 1.1rem;
+  }
+}

@@ -29,6 +29,21 @@ export default function SettingsPage() {
   const [courseSettings, setCourseSettings] = useState<CourseSettingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [devMode, setDevMode] = useState(false);
+
+  // Load developer mode setting
+  useEffect(() => {
+    const saved = localStorage.getItem("devMode");
+    setDevMode(saved === "true");
+  }, []);
+
+  const handleDevModeToggle = () => {
+    const newValue = !devMode;
+    setDevMode(newValue);
+    localStorage.setItem("devMode", String(newValue));
+    // Dispatch storage event for other tabs/components
+    window.dispatchEvent(new StorageEvent("storage", { key: "devMode", newValue: String(newValue) }));
+  };
 
   useEffect(() => {
     const saved = localStorage.getItem("accounts");
@@ -258,6 +273,33 @@ export default function SettingsPage() {
             })}
           </Table.Body>
         </Table>
+      </View>
+
+      {/* Developer Settings Section */}
+      <View as="section" margin="large 0 0 0">
+        <Heading level="h3" margin="0 0 medium 0">Developer Settings</Heading>
+        <View
+          as="div"
+          padding="medium"
+          background="secondary"
+          borderRadius="medium"
+          borderWidth="small"
+        >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div>
+              <Text weight="bold">Developer Mode</Text>
+              <Text as="p" size="small" color="secondary" style={{ margin: "0.25rem 0 0 0" }}>
+                When enabled, shows a floating button to view all Canvas API requests and responses.
+              </Text>
+            </div>
+            <Checkbox
+              label=""
+              variant="toggle"
+              checked={devMode}
+              onChange={handleDevModeToggle}
+            />
+          </div>
+        </View>
       </View>
     </div>
   );

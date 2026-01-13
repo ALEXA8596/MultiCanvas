@@ -7,8 +7,6 @@ import { Text } from "@instructure/ui-text";
 import { Link } from "@instructure/ui-link";
 import { Flex } from "@instructure/ui-flex";
 import { Account, DiscussionTopic, fetchCourseAnnouncements } from "../../../../components/canvasApi";
-import CourseNav from "../CourseNav";
-import CourseHeader from "../CourseHeader";
 import "../../../stylesheets/announcements.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUser } from "@fortawesome/free-solid-svg-icons";
@@ -62,8 +60,6 @@ export default function AnnouncementsPage() {
 
   return (
     <View as="div" padding="medium" width="100%">
-      <CourseHeader />
-      <CourseNav accountDomain={accountDomain} courseId={courseId} />
       <Heading level="h3" margin="0 0 medium">Announcements</Heading>
       {loading && <Text>Loading announcements...</Text>}
       {!loading && error && <Text color="danger">{error}</Text>}

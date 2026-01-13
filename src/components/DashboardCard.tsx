@@ -212,21 +212,6 @@ export default function DashboardCardComponent({ card, setting, onOpenSettings }
                 flexDirection: 'column',
                 gap: '0.25rem',
               }}>
-                <Text as="p" style={{ margin: '0' }}>
-                  <Link
-                    href={baseCourseUrl}
-                    onClick={(e) => { e.stopPropagation(); }}
-                    style={{
-                      color: 'var(--primary)',
-                      textDecoration: 'none',
-                      fontWeight: '500',
-                      fontSize: '0.875rem',
-                      transition: 'color var(--transition-fast)'
-                    }}
-                  >
-                    Open Course
-                  </Link>
-                </Text>
                 <Text size="x-small" style={{ color: 'var(--text-muted)', margin: '0' }}>
                   <Link
                     href={coursesPathUrl}
@@ -237,7 +222,7 @@ export default function DashboardCardComponent({ card, setting, onOpenSettings }
                       transition: 'color var(--transition-fast)'
                     }}
                   >
-                    {card.account.domain}
+                    Open in School's Canvas
                   </Link>
                 </Text>
                 {typeof setting?.credits === 'number' && (

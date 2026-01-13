@@ -10,14 +10,18 @@ import {
 import {
   Term,
   TermCourse,
+  GpaProfile,
   getTerms,
   addTerm,
   deleteTerm,
-  updateTerm,
   getAllTermCourses,
   addTermCourse,
   updateTermCourse,
   deleteTermCourse,
+  getGpaProfiles,
+  addGpaProfile,
+  updateGpaProfile,
+  deleteGpaProfile,
   getCourseSettingId,
 } from "@/lib/db";
 import { View } from "@instructure/ui-view";
@@ -37,45 +41,72 @@ type CourseWithGrade = {
 };
 
 const GRADE_POINT_MAP: Record<string, number> = {
-  "A": 4.0,
-  "A-": 3.7,
-  "B+": 3.3,
-  "B": 3.0,
-  "B-": 2.7,
-  "C+": 2.3,
-  "C": 2.0,
-  "C-": 1.7,
-  "D+": 1.3,
-  "D": 1.0,
-  "D-": 0.7,
+  "A+": 4.0, "A": 4.0, "A-": 3.7,
+  "B+": 3.3, "B": 3.0, "B-": 2.7,
+  "C+": 2.3, "C": 2.0, "C-": 1.7,
+  "D+": 1.3, "D": 1.0, "D-": 0.7,
   "F": 0.0,
 };
 
-const COURSE_TYPES: { value: string; label: string }[] = [
+const COURSE_TYPES = [
   { value: "regular", label: "Regular" },
   { value: "academic", label: "Academic" },
-  { value: "non-academic", label: "Non-Academic" },
-  { value: "honors", label: "Honors" },
   { value: "accelerated", label: "Accelerated" },
+  { value: "honors", label: "Honors" },
   { value: "ap", label: "AP" },
   { value: "ib", label: "IB" },
   { value: "dual-enrollment", label: "Dual Enrollment" },
   { value: "concurrent-enrollment", label: "Concurrent Enrollment" },
 ];
 
-const COURSE_TYPE_WEIGHTS: Record<string, number> = {
-  "regular": 0,
-  "academic": 0,
-  "non-academic": 0,
-  "honors": 1,
-  "accelerated": 0,
-  "ap": 1,
-  "ib": 1,
-  "dual-enrollment": 1,
-  "concurrent-enrollment": 1,
+const DEFAULT_WEIGHTS = {
+  regular: 0, academic: 0, accelerated: 0, honors: 0,
+  ap: 0, ib: 0, dualEnrollment: 0, concurrentEnrollment: 0,
 };
 
-const HONORS_WEIGHT_TYPES = new Set(["honors", "ap", "ib", "dual-enrollment", "concurrent-enrollment"]);
+// Built-in GPA profile presets
+const GPA_PRESETS: Record<string, Omit<GpaProfile, 'id' | 'createdAt'>> = {
+  unweighted: {
+    name: "Unweighted GPA",
+    description: "Standard 4.0 scale GPA with no bonus points for advanced courses",
+    includedGradeLevels: [9, 10, 11, 12],
+    weights: {
+      regular: 0, academic: 0, accelerated: 0, honors: 0,
+      ap: 0, ib: 0, dualEnrollment: 0, concurrentEnrollment: 0,
+    },
+    caps: { perGradeLevel: {}, total: null },
+  },
+  weighted: {
+    name: "Weighted GPA",
+    description: "Weighted GPA with +1.0 for Honors/AP/IB/Dual Enrollment courses",
+    includedGradeLevels: [9, 10, 11, 12],
+    weights: {
+      regular: 0, academic: 0, accelerated: 0, honors: 1,
+      ap: 1, ib: 1, dualEnrollment: 1, concurrentEnrollment: 1,
+    },
+    caps: { perGradeLevel: {}, total: null },
+  },
+  "10-11-weighted": {
+    name: "10-11 Weighted GPA",
+    description: "Weighted GPA counting only 10th and 11th grade courses",
+    includedGradeLevels: [10, 11],
+    weights: {
+      regular: 0, academic: 0, accelerated: 0, honors: 1,
+      ap: 1, ib: 1, dualEnrollment: 1, concurrentEnrollment: 1,
+    },
+    caps: { perGradeLevel: {}, total: null },
+  },
+  "uc-capped": {
+    name: "UC Capped GPA",
+    description: "UC system GPA: 10th-11th grade only, max 4 honors points in 10th, 8 total",
+    includedGradeLevels: [10, 11],
+    weights: {
+      regular: 0, academic: 0, accelerated: 0, honors: 1,
+      ap: 1, ib: 1, dualEnrollment: 1, concurrentEnrollment: 1,
+    },
+    caps: { perGradeLevel: { "10": 4 }, total: 8 },
+  },
+};
 
 type ManualCourseWithTerm = TermCourse & {
   term?: Term;
@@ -88,145 +119,90 @@ function extractGradeLevel(gradeText?: string | null): number | null {
   const match = gradeText.match(/(\d+)/);
   if (!match) return null;
   const value = parseInt(match[1], 10);
-  if (!Number.isFinite(value)) return null;
-  if (value < 6 || value > 14) return null;
+  if (!Number.isFinite(value) || value < 6 || value > 14) return null;
   return value;
 }
 
-type WhatIfCourse = {
-  id: string;
-  courseName: string;
-  credits: number;
-  grade: string;
-  courseType: string;
-  termLabel: string;
-};
-
 export default function GradesPage() {
   const [accounts, setAccounts] = useState<Account[]>([]);
-  const [coursesWithGrades, setCoursesWithGrades] = useState<
-    CourseWithGrade[]
-  >([]);
+  const [coursesWithGrades, setCoursesWithGrades] = useState<CourseWithGrade[]>([]);
   const courseSettings = useCourseSettingsMap();
   const [terms, setTerms] = useState<Term[]>([]);
   const [termCourses, setTermCourses] = useState<TermCourse[]>([]);
+  const [gpaProfiles, setGpaProfiles] = useState<GpaProfile[]>([]);
+  const [selectedProfileId, setSelectedProfileId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // UI state
+  const [activeTab, setActiveTab] = useState<'current' | 'manual' | 'calculator'>('current');
+  const [showProfileEditor, setShowProfileEditor] = useState(false);
+  const [editingProfile, setEditingProfile] = useState<GpaProfile | null>(null);
 
-  // Form state for adding a term
+  // Term form state
   const [termYear, setTermYear] = useState(new Date().getFullYear());
   const [termSeason, setTermSeason] = useState("Fall");
   const [termGradeLevel, setTermGradeLevel] = useState("");
 
-  // Form state for adding/editing a course
+  // Course form state
   const [editingCourse, setEditingCourse] = useState<TermCourse | null>(null);
   const [selectedTermId, setSelectedTermId] = useState<number | null>(null);
   const [formCourseName, setFormCourseName] = useState("");
-  const [formCredits, setFormCredits] = useState(3);
+  const [formCredits, setFormCredits] = useState(5);
   const [formGrade, setFormGrade] = useState("A");
   const [formCourseType, setFormCourseType] = useState("regular");
-  const [whatIfCourses, setWhatIfCourses] = useState<WhatIfCourse[]>([]);
-  const [whatIfActive, setWhatIfActive] = useState(false);
-  const [whatIfTermGrades, setWhatIfTermGrades] = useState<Record<string, string>>({});
-  const [customExtraPoints, setCustomExtraPoints] = useState<Record<string, number>>({
-    accelerated: 0,
-    honors: 1,
-    ap: 1,
-    ib: 1,
-    "dual-enrollment": 1,
-    "concurrent-enrollment": 1,
+
+  // Profile editor state
+  const [profileName, setProfileName] = useState("");
+  const [profileDescription, setProfileDescription] = useState("");
+  const [profileGradeLevels, setProfileGradeLevels] = useState<number[]>([9, 10, 11, 12]);
+  const [profileWeights, setProfileWeights] = useState({ ...DEFAULT_WEIGHTS });
+  const [profileCaps, setProfileCaps] = useState<{ perGradeLevel: Record<string, number | null>; total: number | null }>({
+    perGradeLevel: {}, total: null
   });
-  const [customGradeCaps, setCustomGradeCaps] = useState<Record<string, string>>({
-    "9": "",
-    "10": "",
-    "11": "",
-    "12": "",
-  });
-  const [customTotalExtraCap, setCustomTotalExtraCap] = useState("");
-  const [customSelectedCourses, setCustomSelectedCourses] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     const saved = localStorage.getItem("accounts");
     if (saved) {
-      try {
-        setAccounts(JSON.parse(saved));
-      } catch {
-        // ignore parse errors
-      }
+      try { setAccounts(JSON.parse(saved)); } catch { /* ignore */ }
     }
-    loadManualGradeData();
+    loadData();
   }, []);
 
-  async function loadManualGradeData() {
-    const [terms, courses] = await Promise.all([getTerms(), getAllTermCourses()]);
-    const seasonOrder: { [key: string]: number } = { "Fall": 3, "Summer": 2, "Spring": 1, "Winter": 0 };
-    setTerms(terms.sort((a, b) => {
-        if (a.year !== b.year) {
-            return b.year - a.year;
-        }
-        return (seasonOrder[b.season] ?? -1) - (seasonOrder[a.season] ?? -1);
+  async function loadData() {
+    const [termsData, coursesData, profilesData] = await Promise.all([
+      getTerms(), getAllTermCourses(), getGpaProfiles()
+    ]);
+    
+    const seasonOrder: Record<string, number> = { Fall: 3, Summer: 2, Spring: 1, Winter: 0 };
+    setTerms(termsData.sort((a, b) => {
+      if (a.year !== b.year) return b.year - a.year;
+      return (seasonOrder[b.season] ?? -1) - (seasonOrder[a.season] ?? -1);
     }));
-    setTermCourses(courses);
+    setTermCourses(coursesData);
+    setGpaProfiles(profilesData);
+    
+    if (profilesData.length > 0 && !selectedProfileId) {
+      setSelectedProfileId(profilesData[0].id ?? null);
+    }
   }
 
   useEffect(() => {
-    setCustomSelectedCourses((prev) => {
-      const updated: Record<number, boolean> = {};
-      let changed = false;
-      termCourses.forEach((course) => {
-        if (course.id != null) {
-          updated[course.id] = prev[course.id] ?? true;
-          if (prev[course.id] === undefined) {
-            changed = true;
-          }
-        }
-      });
-      if (Object.keys(prev).length !== Object.keys(updated).length) {
-        changed = true;
-      }
-      return changed ? updated : prev;
-    });
-  }, [termCourses]);
-
-  const manualCoursesWithTerm = useMemo<ManualCourseWithTerm[]>(() => {
-    return termCourses.map((course) => {
-      const term = terms.find((t) => t.id === course.termId);
-      const termLabel = term ? `${term.season} ${term.year}` : "Unknown Term";
-      const gradeLevel = term ? extractGradeLevel(term.termGrade) : null;
-      return {
-        ...course,
-        term,
-        termLabel,
-        gradeLevel,
-      };
-    });
-  }, [termCourses, terms]);
-
-  useEffect(() => {
-    if (accounts.length === 0) {
-      setLoading(false);
-      return;
-    }
-
+    if (accounts.length === 0) { setLoading(false); return; }
     let cancelled = false;
     setLoading(true);
-    setError(null);
-
+    
     Promise.all([fetchAllCourses(accounts), ...accounts.map(fetchUserEnrollments)])
       .then((results) => {
         if (cancelled) return;
-
         const courseResults = results[0] as { account: Account; courses: CanvasCourse[] }[];
         const enrollmentResults = results.slice(1) as Enrollment[][];
-
         const allCourses = courseResults.flatMap(({ account, courses }) =>
           courses.map((course) => ({ account, course }))
         );
-
         const allEnrollments = enrollmentResults.flatMap((enrollments, index) =>
-          enrollments.map(e => ({...e, account: accounts[index]}))
+          enrollments.map(e => ({ ...e, account: accounts[index] }))
         );
-
         const merged: CourseWithGrade[] = [];
         allEnrollments.forEach((enrollment) => {
           if (enrollment.type === 'StudentEnrollment') {
@@ -234,62 +210,117 @@ export default function GradesPage() {
               (c) => c.course.id === enrollment.course_id && c.account.id === enrollment.account.id
             );
             if (courseInfo) {
-              merged.push({
-                course: courseInfo.course,
-                enrollment,
-                account: courseInfo.account,
-              });
+              merged.push({ course: courseInfo.course, enrollment, account: courseInfo.account });
             }
           }
         });
-
         setCoursesWithGrades(merged);
       })
-      .catch((e) => {
-        if (!cancelled) {
-          setError(e.message);
-        }
-      })
-      .finally(() => {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
+      .catch((e) => !cancelled && setError(e.message))
+      .finally(() => !cancelled && setLoading(false));
+    return () => { cancelled = true; };
   }, [accounts]);
 
+  const manualCoursesWithTerm = useMemo<ManualCourseWithTerm[]>(() => {
+    return termCourses.map((course) => {
+      const term = terms.find((t) => t.id === course.termId);
+      return {
+        ...course,
+        term,
+        termLabel: term ? `${term.season} ${term.year}` : "Unknown",
+        gradeLevel: term ? extractGradeLevel(term.termGrade) : null,
+      };
+    });
+  }, [termCourses, terms]);
+
+  const selectedProfile = gpaProfiles.find(p => p.id === selectedProfileId) || null;
+
+  const calculateGPA = useMemo(() => {
+    if (!selectedProfile) return { gpa: "N/A", credits: 0, basePoints: 0, extraPoints: 0 };
+    
+    const { includedGradeLevels, weights, caps } = selectedProfile;
+    let totalCredits = 0;
+    let basePoints = 0;
+    let extraPoints = 0;
+    let extraUsedTotal = 0;
+    const extraUsedByGrade: Record<number, number> = {};
+
+    const totalCapValue = caps.total ?? Infinity;
+
+    manualCoursesWithTerm.forEach((course) => {
+      if (course.gradeLevel && !includedGradeLevels.includes(course.gradeLevel)) return;
+      
+      const normalizedGrade = (course.grade || "").trim().toUpperCase();
+      const base = GRADE_POINT_MAP[normalizedGrade];
+      if (base === undefined) return;
+      
+      const credits = Number(course.credits) || 0;
+      if (credits <= 0) return;
+
+      totalCredits += credits;
+      basePoints += base * credits;
+
+      // Calculate weight bonus
+      const courseType = course.courseType ?? "regular";
+      const weightKey = courseType.replace(/-/g, '') as keyof typeof weights;
+      const mappedKey = courseType === 'dual-enrollment' ? 'dualEnrollment' 
+        : courseType === 'concurrent-enrollment' ? 'concurrentEnrollment' 
+        : weightKey;
+      const extraPerCredit = weights[mappedKey as keyof typeof weights] ?? 0;
+      const candidate = extraPerCredit * credits;
+      if (candidate <= 0) return;
+
+      const availableTotal = totalCapValue - extraUsedTotal;
+      if (availableTotal <= 0) return;
+
+      let availableForGrade = Infinity;
+      if (course.gradeLevel) {
+        const gradeCap = caps.perGradeLevel[course.gradeLevel.toString()];
+        if (gradeCap !== null && gradeCap !== undefined) {
+          const alreadyUsed = extraUsedByGrade[course.gradeLevel] ?? 0;
+          availableForGrade = gradeCap - alreadyUsed;
+          if (availableForGrade <= 0) return;
+        }
+      }
+
+      const applied = Math.min(candidate, availableTotal, availableForGrade);
+      extraPoints += applied;
+      extraUsedTotal += applied;
+      if (course.gradeLevel) {
+        extraUsedByGrade[course.gradeLevel] = (extraUsedByGrade[course.gradeLevel] ?? 0) + applied;
+      }
+    });
+
+    if (totalCredits === 0) return { gpa: "N/A", credits: 0, basePoints: 0, extraPoints: 0 };
+    
+    return {
+      gpa: ((basePoints + extraPoints) / totalCredits).toFixed(3),
+      credits: totalCredits,
+      basePoints: Number((basePoints / totalCredits).toFixed(3)),
+      extraPoints: Number(extraPoints.toFixed(2)),
+    };
+  }, [selectedProfile, manualCoursesWithTerm]);
+
+  // Handlers
   const handleAddTerm = async () => {
     if (!termGradeLevel.trim()) {
-      window.alert("Please enter a grade level for this term (e.g., 9th).");
+      alert("Please enter a grade level (e.g., 9th, 10th).");
       return;
     }
-    await addTerm({
-      year: termYear,
-      season: termSeason,
-      termGrade: termGradeLevel.trim(),
-    });
-    await loadManualGradeData();
+    await addTerm({ year: termYear, season: termSeason, termGrade: termGradeLevel.trim() });
+    await loadData();
     setTermGradeLevel("");
   };
 
   const handleDeleteTerm = async (id: number) => {
-    if (window.confirm("Are you sure you want to delete this term and all its courses?")) {
+    if (confirm("Delete this term and all its courses?")) {
       await deleteTerm(id);
-      await loadManualGradeData();
+      await loadData();
     }
   };
 
-  const handleTermGradeChange = async (term: Term, grade: string) => {
-    await updateTerm({ ...term, termGrade: grade.trim() });
-    await loadManualGradeData();
-  };
-
   const handleSaveCourse = async () => {
-    if (!selectedTermId) return;
-
+    if (!selectedTermId || !formCourseName.trim()) return;
     const courseData: TermCourse = {
       id: editingCourse?.id,
       termId: selectedTermId,
@@ -298,16 +329,17 @@ export default function GradesPage() {
       grade: formGrade.trim().toUpperCase(),
       courseType: formCourseType,
     };
-
     if (editingCourse?.id) {
       await updateTermCourse(courseData);
     } else {
       await addTermCourse(courseData);
     }
-    
     setEditingCourse(null);
-    resetCourseForm();
-    await loadManualGradeData();
+    setFormCourseName("");
+    setFormCredits(5);
+    setFormGrade("A");
+    setFormCourseType("regular");
+    await loadData();
   };
 
   const handleEditCourse = (course: TermCourse) => {
@@ -319,1000 +351,548 @@ export default function GradesPage() {
     setFormCourseType(course.courseType ?? "regular");
   };
 
-  const handleDeleteCourse = async (id: number) => {
-    await deleteTermCourse(id);
-    await loadManualGradeData();
-  };
-
-  const handleSyncCourse = async (courseWithGrade: CourseWithGrade) => {
+  const handleSyncCourse = async (cg: CourseWithGrade) => {
     if (!selectedTermId) {
-      window.alert("Select a term in the manual GPA section before syncing a course.");
+      alert("Please select a term first.");
       return;
     }
-
-    const grade =
-      courseWithGrade.enrollment.grades.current_grade ??
-      courseWithGrade.enrollment.grades.final_grade ??
-      "";
-
+    const grade = cg.enrollment.grades.current_grade ?? cg.enrollment.grades.final_grade ?? "";
     await addTermCourse({
       termId: selectedTermId,
-      courseName: courseWithGrade.course.name,
-      credits: 1,
+      courseName: cg.course.name,
+      credits: 5,
       grade: grade.trim().toUpperCase(),
       courseType: "regular",
     });
-
-    await loadManualGradeData();
+    await loadData();
   };
 
-  const startWhatIfScenario = () => {
-    if (coursesWithGrades.length === 0) {
-      window.alert("There are no current grades to copy into a what-if scenario.");
+  const openProfileEditor = (profile?: GpaProfile) => {
+    if (profile) {
+      setEditingProfile(profile);
+      setProfileName(profile.name);
+      setProfileDescription(profile.description ?? "");
+      setProfileGradeLevels([...profile.includedGradeLevels]);
+      setProfileWeights({ ...profile.weights });
+      setProfileCaps({ ...profile.caps });
+    } else {
+      setEditingProfile(null);
+      setProfileName("");
+      setProfileDescription("");
+      setProfileGradeLevels([9, 10, 11, 12]);
+      setProfileWeights({ ...DEFAULT_WEIGHTS });
+      setProfileCaps({ perGradeLevel: {}, total: null });
+    }
+    setShowProfileEditor(true);
+  };
+
+  const loadPreset = (presetKey: string) => {
+    const preset = GPA_PRESETS[presetKey];
+    if (!preset) return;
+    setProfileName(preset.name);
+    setProfileDescription(preset.description ?? "");
+    setProfileGradeLevels([...preset.includedGradeLevels]);
+    setProfileWeights({ ...preset.weights });
+    setProfileCaps({ perGradeLevel: { ...preset.caps.perGradeLevel }, total: preset.caps.total });
+  };
+
+  const handleSaveProfile = async () => {
+    if (!profileName.trim()) {
+      alert("Please enter a profile name.");
       return;
     }
-
-    const scenarioCourses = coursesWithGrades.map(({ course, enrollment }) => ({
-      id: `${course.id}-${enrollment.id}`,
-      courseName: course.name,
-      credits: 1,
-      grade:
-        (
-          enrollment.grades.current_grade ??
-          enrollment.grades.final_grade ??
-          ""
-        ).trim().toUpperCase(),
-      courseType: "regular",
-      termLabel:
-        (enrollment.current_grading_period_title && enrollment.current_grading_period_title.trim().length > 0)
-          ? enrollment.current_grading_period_title
-          : "Scenario Term",
-    }));
-
-    setWhatIfCourses(scenarioCourses);
-
-    const initialTermGrades: Record<string, string> = {};
-    scenarioCourses.forEach((course) => {
-      if (!initialTermGrades[course.termLabel]) {
-        initialTermGrades[course.termLabel] = "";
-      }
-    });
-    setWhatIfTermGrades(initialTermGrades);
-    setWhatIfActive(true);
-  };
-
-  const resetWhatIfScenario = () => {
-    setWhatIfCourses([]);
-    setWhatIfTermGrades({});
-    setWhatIfActive(false);
-  };
-
-  const handleWhatIfCourseChange = (id: string, field: keyof WhatIfCourse, value: string | number) => {
-    setWhatIfCourses((prev) => {
-      let previousLabel = "";
-      let updatedLabel = "";
-
-      const updatedCourses = prev.map((course) => {
-        if (course.id !== id) return course;
-
-        previousLabel = course.termLabel;
-
-        if (field === "credits") {
-          const creditsValue = Number(value);
-          return {
-            ...course,
-            credits: Number.isFinite(creditsValue) && creditsValue >= 0 ? creditsValue : 0,
-          };
-        }
-
-        if (field === "termLabel") {
-          updatedLabel =
-            typeof value === "string" && value.trim().length > 0 ? value : "Scenario Term";
-          return {
-            ...course,
-            termLabel: updatedLabel,
-          };
-        }
-
-        if (field === "grade") {
-          const gradeValue =
-            typeof value === "string" ? value.toUpperCase().trim() : String(value).toUpperCase().trim();
-          return {
-            ...course,
-            grade: gradeValue,
-          };
-        }
-
-        return {
-          ...course,
-          [field]: typeof value === "string" ? value : String(value),
-        } as WhatIfCourse;
-      });
-
-      if (field === "termLabel") {
-        const remainingLabels = new Set(updatedCourses.map((course) => course.termLabel));
-        setWhatIfTermGrades((prevGrades) => {
-          const nextGrades: Record<string, string> = {};
-          remainingLabels.forEach((label) => {
-            if (label === updatedLabel) {
-              nextGrades[label] =
-                prevGrades[label] ??
-                (previousLabel && prevGrades[previousLabel] !== undefined ? prevGrades[previousLabel] : "");
-            } else if (prevGrades[label] !== undefined) {
-              nextGrades[label] = prevGrades[label];
-            } else {
-              nextGrades[label] = "";
-            }
-          });
-          return nextGrades;
-        });
-      }
-
-      return updatedCourses;
-    });
-  };
-
-  const handleWhatIfCourseDelete = (id: string) => {
-    setWhatIfCourses((prev) => {
-      const updated = prev.filter((course) => course.id !== id);
-      const remainingLabels = new Set(updated.map((course) => course.termLabel));
-      setWhatIfTermGrades((prevGrades) => {
-        const nextGrades: Record<string, string> = {};
-        remainingLabels.forEach((label) => {
-          nextGrades[label] = prevGrades[label] ?? "";
-        });
-        return nextGrades;
-      });
-      if (updated.length === 0) {
-        setWhatIfActive(false);
-      }
-      return updated;
-    });
-  };
-
-  const handleWhatIfTermGradeChange = (termLabel: string, grade: string) => {
-    setWhatIfTermGrades((prev) => ({ ...prev, [termLabel]: grade.toUpperCase().trim() }));
-  };
-
-  const handleCustomExtraPointChange = (type: keyof typeof customExtraPoints, value: string) => {
-    const parsed = Number(value);
-    setCustomExtraPoints((prev) => ({
-      ...prev,
-      [type]: Number.isFinite(parsed) ? parsed : 0,
-    }));
-  };
-
-  const handleCustomGradeCapChange = (grade: string, value: string) => {
-    setCustomGradeCaps((prev) => ({
-      ...prev,
-      [grade]: value,
-    }));
-  };
-
-  const handleCustomTotalCapChange = (value: string) => {
-    setCustomTotalExtraCap(value);
-  };
-
-  const handleToggleCustomCourse = (courseId: number, checked: boolean) => {
-    setCustomSelectedCourses((prev) => ({
-      ...prev,
-      [courseId]: checked,
-    }));
-  };
-
-  const handleSelectAllCustomCourses = () => {
-    setCustomSelectedCourses((prev) => {
-      const updated: Record<number, boolean> = { ...prev };
-      manualCoursesWithTerm.forEach((course) => {
-        if (course.id != null) {
-          updated[course.id] = true;
-        }
-      });
-      return updated;
-    });
-  };
-
-  const handleClearCustomCourses = () => {
-    setCustomSelectedCourses((prev) => {
-      const updated: Record<number, boolean> = { ...prev };
-      manualCoursesWithTerm.forEach((course) => {
-        if (course.id != null) {
-          updated[course.id] = false;
-        }
-      });
-      return updated;
-    });
-  };
-
-  const resetCourseForm = () => {
-    setFormCourseName("");
-    setFormCredits(3);
-    setFormGrade("A");
-    setFormCourseType("regular");
-  };
-
-  const calculateGPASummary = (courses: { grade: string; credits: number; courseType?: string }[]) => {
-    let totalCredits = 0;
-    let totalPoints = 0;
-    let totalWeightedPoints = 0;
-
-    courses.forEach((course) => {
-      const normalizedGrade = (course.grade || "").trim().toUpperCase();
-      const basePoints = GRADE_POINT_MAP[normalizedGrade];
-      if (basePoints === undefined) return;
-
-      const credits = Number(course.credits) || 0;
-      if (credits <= 0) return;
-
-      const courseType = course.courseType ?? "regular";
-      const weightBonus = COURSE_TYPE_WEIGHTS[courseType] ?? 0;
-      const weightedPoints = Math.min(basePoints + weightBonus, 5.0);
-
-      totalCredits += credits;
-      totalPoints += basePoints * credits;
-      totalWeightedPoints += weightedPoints * credits;
-    });
-
-    if (totalCredits === 0) {
-      return { unweighted: "N/A", weighted: "N/A" };
-    }
-
-    return {
-      unweighted: (totalPoints / totalCredits).toFixed(2),
-      weighted: (totalWeightedPoints / totalCredits).toFixed(2),
+    const profile: GpaProfile = {
+      id: editingProfile?.id,
+      name: profileName.trim(),
+      description: profileDescription.trim(),
+      includedGradeLevels: profileGradeLevels,
+      weights: profileWeights,
+      caps: profileCaps,
     };
-  };
-
-  const calculateUCGPACapped = (courses: ManualCourseWithTerm[]) => {
-    let totalCredits = 0;
-    let basePoints = 0;
-    let extraPoints = 0;
-    let extraUsedGrade10 = 0;
-    let totalExtraUsed = 0;
-    let countedCourses = 0;
-
-    courses.forEach((course) => {
-      if (course.gradeLevel !== 10 && course.gradeLevel !== 11) return;
-      const normalizedGrade = (course.grade || "").trim().toUpperCase();
-      const base = GRADE_POINT_MAP[normalizedGrade];
-      if (base === undefined) return;
-      const credits = Number(course.credits) || 0;
-      if (credits <= 0) return;
-
-      totalCredits += credits;
-      basePoints += base * credits;
-      countedCourses += 1;
-
-      const courseType = course.courseType ?? "regular";
-      if (!HONORS_WEIGHT_TYPES.has(courseType)) {
-        return;
-      }
-
-      const availableTotal = Math.max(0, 8 - totalExtraUsed);
-      if (availableTotal <= 0) return;
-
-      const candidate = credits;
-
-      if (course.gradeLevel === 10) {
-        const availableGrade10 = Math.max(0, 4 - extraUsedGrade10);
-        if (availableGrade10 <= 0) return;
-        const applied = Math.min(candidate, availableTotal, availableGrade10);
-        extraPoints += applied;
-        extraUsedGrade10 += applied;
-        totalExtraUsed += applied;
-      } else {
-        const applied = Math.min(candidate, availableTotal);
-        extraPoints += applied;
-        totalExtraUsed += applied;
-      }
-    });
-
-    if (totalCredits === 0) {
-      return {
-        gpa: "N/A",
-        credits: 0,
-        courses: 0,
-        extraUsed: 0,
-        extraUsedGrade10: 0,
-      };
+    if (editingProfile?.id) {
+      await updateGpaProfile(profile);
+    } else {
+      const newId = await addGpaProfile(profile);
+      setSelectedProfileId(newId);
     }
-
-    return {
-      gpa: ((basePoints + extraPoints) / totalCredits).toFixed(2),
-      credits: totalCredits,
-      courses: countedCourses,
-      extraUsed: Number(extraPoints.toFixed(2)),
-      extraUsedGrade10: Number(extraUsedGrade10.toFixed(2)),
-    };
+    setShowProfileEditor(false);
+    await loadData();
   };
 
-  const calculateUCUnweighted = (courses: ManualCourseWithTerm[]) => {
-    let totalCredits = 0;
-    let basePoints = 0;
-    let countedCourses = 0;
-
-    courses.forEach((course) => {
-      if (course.gradeLevel !== 10 && course.gradeLevel !== 11) return;
-
-      const normalizedGrade = (course.grade || "").trim().toUpperCase();
-      const base = GRADE_POINT_MAP[normalizedGrade];
-      if (base === undefined) return;
-
-      const credits = Number(course.credits) || 0;
-      if (credits <= 0) return;
-
-      totalCredits += credits;
-      basePoints += base * credits;
-      countedCourses += 1;
-    });
-
-    if (totalCredits === 0) {
-      return { gpa: "N/A", credits: 0, courses: 0 };
+  const handleDeleteProfile = async (id: number) => {
+    if (confirm("Delete this GPA profile?")) {
+      await deleteGpaProfile(id);
+      if (selectedProfileId === id) setSelectedProfileId(null);
+      await loadData();
     }
-
-    return {
-      gpa: (basePoints / totalCredits).toFixed(2),
-      credits: totalCredits,
-      courses: countedCourses,
-    };
   };
 
-  const calculateUCFullWeighted = (courses: ManualCourseWithTerm[]) => {
-    let totalCredits = 0;
-    let basePoints = 0;
-    let extraPoints = 0;
-    let countedCourses = 0;
-
-    courses.forEach((course) => {
-      if (course.gradeLevel !== 10 && course.gradeLevel !== 11) return;
-
-      const normalizedGrade = (course.grade || "").trim().toUpperCase();
-      const base = GRADE_POINT_MAP[normalizedGrade];
-      if (base === undefined) return;
-
-      const credits = Number(course.credits) || 0;
-      if (credits <= 0) return;
-
-      totalCredits += credits;
-      basePoints += base * credits;
-      countedCourses += 1;
-
-      const courseType = course.courseType ?? "regular";
-      if (HONORS_WEIGHT_TYPES.has(courseType)) {
-        extraPoints += credits;
-      }
-    });
-
-    if (totalCredits === 0) {
-      return { gpa: "N/A", credits: 0, courses: 0, extraUsed: 0 };
-    }
-
-    return {
-      gpa: ((basePoints + extraPoints) / totalCredits).toFixed(2),
-      credits: totalCredits,
-      courses: countedCourses,
-      extraUsed: Number(extraPoints.toFixed(2)),
-    };
+  const toggleGradeLevel = (level: number) => {
+    setProfileGradeLevels(prev => 
+      prev.includes(level) ? prev.filter(l => l !== level) : [...prev, level].sort()
+    );
   };
-
-  const calculateCustomGPA = (
-    courses: ManualCourseWithTerm[],
-    selection: Record<number, boolean>,
-    extraConfig: Record<string, number>,
-    gradeCaps: Record<string, string>,
-    totalCap: string
-  ) => {
-    let totalCredits = 0;
-    let basePoints = 0;
-    let extraPoints = 0;
-    let extraUsedTotal = 0;
-    const extraUsedByGrade: Record<number, number> = {};
-
-    const parsedTotalCap = Number(totalCap);
-    const totalCapValue = totalCap.trim() === "" || !Number.isFinite(parsedTotalCap) || parsedTotalCap < 0
-      ? Number.POSITIVE_INFINITY
-      : parsedTotalCap;
-
-    courses.forEach((course) => {
-  if (course.id == null) return;
-  if (selection[course.id] === false) return;
-
-      const normalizedGrade = (course.grade || "").trim().toUpperCase();
-      const base = GRADE_POINT_MAP[normalizedGrade];
-      if (base === undefined) return;
-      const credits = Number(course.credits) || 0;
-      if (credits <= 0) return;
-
-      totalCredits += credits;
-      basePoints += base * credits;
-
-      const courseType = course.courseType ?? "regular";
-      const extraPerCredit = extraConfig[courseType] ?? 0;
-      const candidate = extraPerCredit * credits;
-      if (candidate <= 0) return;
-
-  const availableTotal = totalCapValue - extraUsedTotal;
-      if (availableTotal <= 0) return;
-
-      let availableForGrade = Number.POSITIVE_INFINITY;
-      if (course.gradeLevel && course.gradeLevel >= 0) {
-        const capString = gradeCaps[course.gradeLevel.toString()];
-        const parsedCap = Number(capString);
-        const capValue = capString && capString.trim() !== "" && Number.isFinite(parsedCap) && parsedCap >= 0
-          ? parsedCap
-          : Number.POSITIVE_INFINITY;
-        const alreadyUsed = extraUsedByGrade[course.gradeLevel] ?? 0;
-        availableForGrade = capValue - alreadyUsed;
-        if (availableForGrade <= 0) return;
-      }
-
-      const applied = Math.max(0, Math.min(candidate, availableTotal, availableForGrade));
-      if (applied <= 0) return;
-
-      extraPoints += applied;
-      extraUsedTotal += applied;
-      if (course.gradeLevel) {
-        extraUsedByGrade[course.gradeLevel] = (extraUsedByGrade[course.gradeLevel] ?? 0) + applied;
-      }
-    });
-
-    if (totalCredits === 0) {
-      return {
-        gpa: "N/A",
-        credits: 0,
-        extraUsed: 0,
-        extraByGrade: {},
-      };
-    }
-
-    const extraSummary: Record<number, number> = {};
-    Object.entries(extraUsedByGrade).forEach(([grade, value]) => {
-      if (value > 0) {
-        extraSummary[Number(grade)] = Number(value.toFixed(2));
-      }
-    });
-
-    return {
-      gpa: ((basePoints + extraPoints) / totalCredits).toFixed(2),
-      credits: totalCredits,
-      extraUsed: Number(extraPoints.toFixed(2)),
-      extraByGrade: extraSummary,
-    };
-  };
-
-  const manualGPA = calculateGPASummary(termCourses);
-  const whatIfGPA = calculateGPASummary(whatIfCourses);
-  const whatIfTermLabels = Array.from(
-    new Set(
-      whatIfCourses.map((course) => {
-        const label = course.termLabel?.trim();
-        return label && label.length > 0 ? label : "Scenario Term";
-      })
-    )
-  );
-  const ucGPA = calculateUCGPACapped(manualCoursesWithTerm);
-  const ucUnweighted = calculateUCUnweighted(manualCoursesWithTerm);
-  const ucFullWeighted = calculateUCFullWeighted(manualCoursesWithTerm);
-  const customGPA = calculateCustomGPA(
-    manualCoursesWithTerm,
-    customSelectedCourses,
-    customExtraPoints,
-    customGradeCaps,
-    customTotalExtraCap
-  );
 
   return (
     <div className="grades-container fade-in">
       <div className="grades-header">
-        <Heading level="h2" margin="0 0 medium 0" className="text-gradient">
-          Grades
-        </Heading>
+        <Heading level="h2" margin="0">Grades</Heading>
       </div>
 
-      {loading && <Text>Loading grades...</Text>}
-      {error && <Text color="danger">Error: {error}</Text>}
+      {/* Tab Navigation */}
+      <div className="grades-tabs">
+        <button 
+          className={`tab-button ${activeTab === 'current' ? 'active' : ''}`}
+          onClick={() => setActiveTab('current')}
+        >
+          Current Grades
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'manual' ? 'active' : ''}`}
+          onClick={() => setActiveTab('manual')}
+        >
+          Manual Entry
+        </button>
+        <button 
+          className={`tab-button ${activeTab === 'calculator' ? 'active' : ''}`}
+          onClick={() => setActiveTab('calculator')}
+        >
+          GPA Calculator
+        </button>
+      </div>
 
-      {!loading && !error && coursesWithGrades.length === 0 && (
-        <View as="div" textAlign="center" padding="large">
-          <Heading level="h3" margin="0 0 small 0">No Grades Available</Heading>
-          <Text>
-            Either you have no active student enrollments, or grades are not available.
-          </Text>
-        </View>
-      )}
-
-      {!loading && !error && coursesWithGrades.length > 0 && (
-        <Table caption="Course Grades">
-          <Table.Head>
-            <Table.Row>
-              <Table.ColHeader id="course-name">Course</Table.ColHeader>
-              <Table.ColHeader id="current-score">Current Score</Table.ColHeader>
-              <Table.ColHeader id="current-grade">Current Grade</Table.ColHeader>
-              <Table.ColHeader id="final-score">Final Score</Table.ColHeader>
-              <Table.ColHeader id="final-grade">Final Grade</Table.ColHeader>
-              <Table.ColHeader id="details">Details</Table.ColHeader>
-              <Table.ColHeader id="sync">Sync</Table.ColHeader>
-            </Table.Row>
-          </Table.Head>
-          <Table.Body>
-            {coursesWithGrades.map(({ course, enrollment, account }) => {
-              const setting = courseSettings[getCourseSettingId(account.domain, course.id)];
-              const { displayName, subtitle } = getCourseDisplay({
-                actualName: course.name,
-                nickname: setting?.nickname,
-                fallback: course.name,
-              });
-              return (
-                <Table.Row key={`${account.id}-${course.id}`}>
-                  <Table.Cell>
-                    <Link href={`/${account.domain}/${course.id}`}>
-                      {displayName}
-                    </Link>
-                    {subtitle && (
-                      <>
-                        <br />
-                        <Text size="x-small" color="secondary">{subtitle}</Text>
-                      </>
-                    )}
-                    <br />
-                    <Text size="small" color="secondary">{account.domain}</Text>
-                  </Table.Cell>
-                <Table.Cell>{enrollment.grades.current_score ?? 'N/A'}</Table.Cell>
-                <Table.Cell>{enrollment.grades.current_grade ?? 'N/A'}</Table.Cell>
-                <Table.Cell>{enrollment.grades.final_score ?? 'N/A'}</Table.Cell>
-                <Table.Cell>{enrollment.grades.final_grade ?? 'N/A'}</Table.Cell>
-                <Table.Cell>
-                  <Link href={`/${account.domain}/${course.id}/grades`}>
-                    What-If Grades
-                  </Link>
-                </Table.Cell>
-                <Table.Cell>
-                  <Button onClick={() => handleSyncCourse({ course, enrollment, account })} size="small" disabled={!selectedTermId}>
-                    Sync
-                  </Button>
-                </Table.Cell>
-                </Table.Row>
-              );
-            })}
-          </Table.Body>
-        </Table>
-      )}
-
-      <div className="grades-card">
-        <h3>Manual Grades for GPA Calculation</h3>
-        <div className="gpa-summary">
-          <div className="gpa-stat">
-            <span className="gpa-stat-label">Manual Unweighted</span>
-            <span className="gpa-stat-value">{manualGPA.unweighted}</span>
-          </div>
-          <div className="gpa-stat">
-            <span className="gpa-stat-label">Manual Weighted</span>
-            <span className="gpa-stat-value">{manualGPA.weighted}</span>
-          </div>
-          <div className="gpa-stat">
-            <span className="gpa-stat-label">UC Unweighted</span>
-            <span className="gpa-stat-value">{ucUnweighted.gpa}</span>
-          </div>
-          <div className="gpa-stat">
-            <span className="gpa-stat-label">UC Full Weighted</span>
-            <span className="gpa-stat-value">{ucFullWeighted.gpa}</span>
-          </div>
-          <div className="gpa-stat">
-            <span className="gpa-stat-label">UC Capped</span>
-            <span className="gpa-stat-value">{ucGPA.gpa}</span>
-          </div>
-        </div>
-        <div className="course-type-hint">
-          <Text size="small" color="secondary">
-            Course type selections add weight to the manual GPA calculation (Accelerated +0.0, Honors/AP/IB/Dual/Concurrent +1.0, Academic and others +0.0).
-          </Text>
-          {ucGPA.credits > 0 ? (
-            <Text size="small" color="secondary">
-              UC capped honors points used: {ucGPA.extraUsed.toFixed(2)} total (Grade 10: {ucGPA.extraUsedGrade10.toFixed(2)}).
-            </Text>
-          ) : (
-            <Text size="small" color="secondary">
-              Add 10th or 11th grade courses to view UC GPA metrics.
-            </Text>
+      {/* Current Grades Tab */}
+      {activeTab === 'current' && (
+        <div className="tab-content">
+          {loading && <Text>Loading grades...</Text>}
+          {error && <Text color="danger">Error: {error}</Text>}
+          
+          {!loading && !error && coursesWithGrades.length === 0 && (
+            <View as="div" textAlign="center" padding="large" className="empty-state">
+              <Heading level="h3" margin="0 0 small 0">No Grades Available</Heading>
+              <Text>No active student enrollments found, or grades are not yet available.</Text>
+            </View>
           )}
-        </div>
 
-        <div className="grades-card" style={{ marginTop: '1.5rem', border: 'none', padding: 0, boxShadow: 'none' }}>
-          <h4>Add New Term</h4>
-          <div className="form-row">
-            <div className="input-container">
-                <label htmlFor="term-year">Year</label>
-                <input id="term-year" type="number" value={termYear} onChange={(e) => setTermYear(Number(e.target.value))} />
-            </div>
-            <div className="input-container">
-                <label htmlFor="season-select">Season</label>
-                <select id="season-select" value={termSeason} onChange={(e) => setTermSeason(e.target.value)}>
-                    <option value="Winter">Winter</option>
-                    <option value="Spring">Spring</option>
-                    <option value="Summer">Summer</option>
-                    <option value="Fall">Fall</option>
-                </select>
-            </div>
-            <div className="input-container">
-                <label htmlFor="term-grade-level">Grade Level (e.g., 9th)</label>
-                <input
-                  id="term-grade-level"
-                  type="text"
-                  value={termGradeLevel}
-                  placeholder="e.g., 11th"
-                  onChange={(e) => setTermGradeLevel(e.target.value)}
-                />
-            </div>
-            <div className="button-row" style={{ marginTop: 0 }}>
-                <button className="action-button primary" onClick={handleAddTerm}>Add Term</button>
-            </div>
-          </div>
-        </div>
-
-
-        <div className="grades-card" style={{ marginTop: '1.5rem', border: 'none', padding: 0, boxShadow: 'none' }}>
-          <h4>{editingCourse ? "Edit" : "Add"} Course</h4>
-          <div className="form-grid">
-            <div className="input-container">
-                <label htmlFor="term-select">Term</label>
-                <select
-                  id="term-select"
-                  value={selectedTermId ?? ''}
-                  onChange={(e) => {
-                    const value = Number(e.target.value);
-                    setSelectedTermId(Number.isFinite(value) && value > 0 ? value : null);
-                  }}
+          {!loading && !error && coursesWithGrades.length > 0 && (
+            <>
+              <div className="sync-controls">
+                <label>Sync to term:</label>
+                <select 
+                  value={selectedTermId ?? ''} 
+                  onChange={(e) => setSelectedTermId(Number(e.target.value) || null)}
                 >
-                    <option value="">Select a Term</option>
-                    {terms.map(term => (
-                        <option key={term.id} value={term.id}>{term.season} {term.year}</option>
-                    ))}
-                </select>
-            </div>
-            <div className="input-container">
-                <label htmlFor="course-name">Course Name</label>
-                <input id="course-name" type="text" value={formCourseName} onChange={(e) => setFormCourseName(e.target.value)} />
-            </div>
-            <div className="input-container">
-                <label htmlFor="course-credits">Credits</label>
-                <input id="course-credits" type="number" value={formCredits} onChange={(e) => setFormCredits(Number(e.target.value))} />
-            </div>
-            <div className="input-container">
-                <label htmlFor="course-type">Course Type</label>
-                <select
-                  id="course-type"
-                  value={formCourseType}
-                  onChange={(e) => setFormCourseType(e.target.value)}
-                >
-                  {COURSE_TYPES.map((type) => (
-                    <option key={type.value} value={type.value}>{type.label}</option>
+                  <option value="">Select a term...</option>
+                  {terms.map(t => (
+                    <option key={t.id} value={t.id}>{t.season} {t.year} ({t.termGrade})</option>
                   ))}
                 </select>
-            </div>
-            <div className="input-container">
-                <label htmlFor="course-grade">Grade (e.g., A, B+)</label>
-                <input id="course-grade" type="text" value={formGrade} onChange={(e) => setFormGrade(e.target.value.toUpperCase())} />
-            </div>
-          </div>
-          <div className="button-row">
-            <button className="action-button primary" onClick={handleSaveCourse} disabled={!selectedTermId}>{editingCourse ? "Update" : "Add"} Course</button>
-            {editingCourse && <button className="action-button secondary" onClick={() => { setEditingCourse(null); resetCourseForm(); }}>Cancel</button>}
-          </div>
-        </div>
-      </div>
-
-
-        {terms.map(term => (
-            <div key={term.id} className="grades-card">
-                <div className="term-header">
-                  <h4>
-                    {term.season} {term.year}
-                    {term.termGrade ? ` - Grade Level: ${term.termGrade}` : ""}
-                  </h4>
-                  <div className="term-actions">
-                    <div className="input-container" style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <label htmlFor={`term-grade-${term.id}`} style={{ marginBottom: 0, marginRight: '0.5rem' }}>Grade Level</label>
-                      <input
-                        id={`term-grade-${term.id}`}
-                        type="text"
-                        value={term.termGrade ?? ""}
-                        placeholder="e.g., 11th"
-                        onChange={(e) => handleTermGradeChange(term, e.target.value)}
-                        style={{ width: '100px' }}
-                      />
-                    </div>
-                    <button className="action-button danger" onClick={() => handleDeleteTerm(term.id!)}>Delete Term</button>
-                  </div>
-                </div>
-                <Table caption={`${term.season} ${term.year} Grades`}>
+              </div>
+              
+              <Table caption="Current Course Grades">
                 <Table.Head>
-                    <Table.Row>
-                    <Table.ColHeader id="manual-course-name">Course Name</Table.ColHeader>
-                    <Table.ColHeader id="manual-credits">Credits</Table.ColHeader>
-          <Table.ColHeader id="manual-course-type">Course Type</Table.ColHeader>
-                    <Table.ColHeader id="manual-grade">Grade</Table.ColHeader>
-                    <Table.ColHeader id="manual-actions">Actions</Table.ColHeader>
-                    </Table.Row>
+                  <Table.Row>
+                    <Table.ColHeader id="course">Course</Table.ColHeader>
+                    <Table.ColHeader id="score">Score</Table.ColHeader>
+                    <Table.ColHeader id="grade">Grade</Table.ColHeader>
+                    <Table.ColHeader id="actions">Actions</Table.ColHeader>
+                  </Table.Row>
                 </Table.Head>
                 <Table.Body>
-                    {termCourses.filter(c => c.termId === term.id).map((course) => (
-                    <Table.Row key={course.id}>
-                        <Table.Cell>{course.courseName}</Table.Cell>
-                        <Table.Cell>{course.credits}</Table.Cell>
-            <Table.Cell>{COURSE_TYPES.find(type => type.value === (course.courseType ?? "regular"))?.label ?? "Regular"}</Table.Cell>
-                        <Table.Cell>{course.grade}</Table.Cell>
+                  {coursesWithGrades.map(({ course, enrollment, account }) => {
+                    const setting = courseSettings[getCourseSettingId(account.domain, course.id)];
+                    const { displayName, subtitle } = getCourseDisplay({
+                      actualName: course.name,
+                      nickname: setting?.nickname,
+                      fallback: course.name,
+                    });
+                    return (
+                      <Table.Row key={`${account.id}-${course.id}`}>
                         <Table.Cell>
-              <div className="button-row" style={{ marginTop: 0 }}>
-                            <button className="action-button secondary" onClick={() => handleEditCourse(course)}>Edit</button>
-                            <button className="action-button danger" onClick={() => handleDeleteCourse(course.id!)}>Delete</button>
-              </div>
+                          <Link href={`/${account.domain}/${course.id}`}>{displayName}</Link>
+                          {subtitle && <><br /><Text size="x-small" color="secondary">{subtitle}</Text></>}
+                          <br /><Text size="small" color="secondary">{account.domain}</Text>
                         </Table.Cell>
-                    </Table.Row>
-                    ))}
+                        <Table.Cell>{enrollment.grades.current_score ?? enrollment.grades.final_score ?? 'N/A'}</Table.Cell>
+                        <Table.Cell>{enrollment.grades.current_grade ?? enrollment.grades.final_grade ?? 'N/A'}</Table.Cell>
+                        <Table.Cell>
+                          <div className="action-buttons">
+                            <Link href={`/${account.domain}/${course.id}/grades`}>What-If</Link>
+                            <Button size="small" onClick={() => handleSyncCourse({ course, enrollment, account })} disabled={!selectedTermId}>
+                              Sync
+                            </Button>
+                          </div>
+                        </Table.Cell>
+                      </Table.Row>
+                    );
+                  })}
                 </Table.Body>
-                </Table>
-            </div>
-        ))}
-
-
-        <div className="grades-card">
-          <h3>Custom GPA Calculator</h3>
-          <Text size="small" color="secondary">
-            Choose which courses to include, customize extra weight by course type, and enforce grade-level or overall caps.
-          </Text>
-
-          <div className="gpa-summary" style={{ marginTop: "1rem" }}>
-            <div className="gpa-stat">
-                <span className="gpa-stat-label">Custom GPA</span>
-                <span className="gpa-stat-value">{customGPA.gpa}</span>
-            </div>
-            <div className="gpa-stat">
-                <span className="gpa-stat-label">Extra Points Used</span>
-                <span className="gpa-stat-value">{customGPA.extraUsed.toFixed(2)}</span>
-            </div>
-            <div className="gpa-stat">
-                <span className="gpa-stat-label">Credits Counted</span>
-                <span className="gpa-stat-value">{customGPA.credits}</span>
-            </div>
-          </div>
-          {Object.keys(customGPA.extraByGrade).length > 0 && (
-            <div className="custom-extra-summary">
-              {Object.entries(customGPA.extraByGrade).map(([grade, value]) => (
-                <Text key={grade} size="small" color="secondary">
-                  Grade {grade}: {value.toFixed(2)} extra points used
-                </Text>
-              ))}
-            </div>
+              </Table>
+            </>
           )}
-
-          <div className="custom-gpa-config">
-            <div className="grades-card" style={{ marginBottom: 0, boxShadow: 'none', border: '1px solid var(--border, #e1e1e1)' }}>
-              <h4>Extra Points by Course Type</h4>
-              <Text size="small" color="secondary">Set the additional weight applied to each selected course type.</Text>
-              <div className="custom-grid" style={{ marginTop: '1rem' }}>
-                {(["accelerated", "honors", "ap", "ib", "dual-enrollment", "concurrent-enrollment"] as const).map((typeKey) => (
-                  <div key={typeKey} className="input-container">
-                    <label htmlFor={`custom-extra-${typeKey}`}>{COURSE_TYPES.find(t => t.value === typeKey)?.label ?? typeKey}</label>
-                    <input
-                      id={`custom-extra-${typeKey}`}
-                      type="number"
-                      step="0.1"
-                      value={customExtraPoints[typeKey] ?? 0}
-                      onChange={(e) => handleCustomExtraPointChange(typeKey, e.target.value)}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="grades-card" style={{ marginBottom: 0, boxShadow: 'none', border: '1px solid var(--border, #e1e1e1)' }}>
-              <h4>Extra Point Caps</h4>
-              <Text size="small" color="secondary">Leave blank for no cap. Caps limit the total extra points credited per grade level and overall.</Text>
-              <div className="custom-grid" style={{ marginTop: '1rem' }}>
-                {(["9", "10", "11", "12"]).map((gradeKey) => (
-                  <div key={gradeKey} className="input-container">
-                    <label htmlFor={`custom-cap-${gradeKey}`}>Grade {gradeKey} Cap</label>
-                    <input
-                      id={`custom-cap-${gradeKey}`}
-                      type="number"
-                      min="0"
-                      step="0.1"
-                      placeholder="Unlimited"
-                      value={customGradeCaps[gradeKey]}
-                      onChange={(e) => handleCustomGradeCapChange(gradeKey, e.target.value)}
-                    />
-                  </div>
-                ))}
-                <div className="input-container">
-                  <label htmlFor="custom-total-cap">Total Extra Cap</label>
-                  <input
-                    id="custom-total-cap"
-                    type="number"
-                    min="0"
-                    step="0.1"
-                    placeholder="Unlimited"
-                    value={customTotalExtraCap}
-                    onChange={(e) => handleCustomTotalCapChange(e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="custom-actions">
-            <button className="action-button secondary" onClick={handleSelectAllCustomCourses}>Select All</button>
-            <button className="action-button secondary" onClick={handleClearCustomCourses}>Clear All</button>
-          </div>
-
-          <Table caption="Custom GPA Course Selection">
-
-            <Table.Head>
-              <Table.Row>
-                <Table.ColHeader id="custom-select">Use</Table.ColHeader>
-                <Table.ColHeader id="custom-term">Term</Table.ColHeader>
-                <Table.ColHeader id="custom-grade-level">Grade Level</Table.ColHeader>
-                <Table.ColHeader id="custom-course">Course</Table.ColHeader>
-                <Table.ColHeader id="custom-type">Course Type</Table.ColHeader>
-                <Table.ColHeader id="custom-credits">Credits</Table.ColHeader>
-                <Table.ColHeader id="custom-grade">Grade</Table.ColHeader>
-              </Table.Row>
-            </Table.Head>
-            <Table.Body>
-              {manualCoursesWithTerm.map((course) => (
-                <Table.Row key={course.id ?? `${course.termId}-${course.courseName}`}>
-                  <Table.Cell>
-                    {course.id != null && (
-                      <input
-                        type="checkbox"
-                        checked={customSelectedCourses[course.id] ?? false}
-                        onChange={(e) => handleToggleCustomCourse(course.id!, e.target.checked)}
-                      />
-                    )}
-                  </Table.Cell>
-                  <Table.Cell>{course.termLabel}</Table.Cell>
-                  <Table.Cell>{course.term?.termGrade ?? "N/A"}</Table.Cell>
-                  <Table.Cell>{course.courseName}</Table.Cell>
-                  <Table.Cell>{COURSE_TYPES.find((type) => type.value === (course.courseType ?? "regular"))?.label ?? "Regular"}</Table.Cell>
-                  <Table.Cell>{course.credits}</Table.Cell>
-                  <Table.Cell>{course.grade}</Table.Cell>
-                </Table.Row>
-              ))}
-              {manualCoursesWithTerm.length === 0 && (
-                <Table.Row>
-                  <Table.Cell colSpan={7}>
-                    <Text size="small" color="secondary">Add courses above to configure a custom GPA.</Text>
-                  </Table.Cell>
-                </Table.Row>
-              )}
-            </Table.Body>
-          </Table>
         </div>
+      )}
 
-        <div className="grades-card">
-          <div className="term-header">
-            <h3>What-If GPA Scenario</h3>
-            <div className="term-actions">
-              <button className="action-button primary" onClick={startWhatIfScenario} disabled={coursesWithGrades.length === 0}>
-                Copy Current Grades
+      {/* Manual Entry Tab */}
+      {activeTab === 'manual' && (
+        <div className="tab-content">
+          {/* Add Term Section */}
+          <div className="section-card">
+            <h3>Add Term</h3>
+            <div className="form-row compact">
+              <div className="input-group">
+                <label>Year</label>
+                <input type="number" value={termYear} onChange={(e) => setTermYear(Number(e.target.value))} />
+              </div>
+              <div className="input-group">
+                <label>Season</label>
+                <select value={termSeason} onChange={(e) => setTermSeason(e.target.value)}>
+                  <option>Fall</option>
+                  <option>Spring</option>
+                  <option>Summer</option>
+                  <option>Winter</option>
+                </select>
+              </div>
+              <div className="input-group">
+                <label>Grade Level</label>
+                <input 
+                  type="text" 
+                  placeholder="e.g., 10th" 
+                  value={termGradeLevel} 
+                  onChange={(e) => setTermGradeLevel(e.target.value)} 
+                />
+              </div>
+              <button className="btn-primary" onClick={handleAddTerm}>Add Term</button>
+            </div>
+          </div>
+
+          {/* Add/Edit Course Section */}
+          <div className="section-card">
+            <h3>{editingCourse ? 'Edit Course' : 'Add Course'}</h3>
+            <div className="form-grid compact">
+              <div className="input-group">
+                <label>Term</label>
+                <select 
+                  value={selectedTermId ?? ''} 
+                  onChange={(e) => setSelectedTermId(Number(e.target.value) || null)}
+                >
+                  <option value="">Select term...</option>
+                  {terms.map(t => <option key={t.id} value={t.id}>{t.season} {t.year}</option>)}
+                </select>
+              </div>
+              <div className="input-group">
+                <label>Course Name</label>
+                <input type="text" value={formCourseName} onChange={(e) => setFormCourseName(e.target.value)} />
+              </div>
+              <div className="input-group">
+                <label>Credits</label>
+                <input type="number" value={formCredits} onChange={(e) => setFormCredits(Number(e.target.value))} />
+              </div>
+              <div className="input-group">
+                <label>Course Type</label>
+                <select value={formCourseType} onChange={(e) => setFormCourseType(e.target.value)}>
+                  {COURSE_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                </select>
+              </div>
+              <div className="input-group">
+                <label>Grade</label>
+                <input type="text" value={formGrade} onChange={(e) => setFormGrade(e.target.value.toUpperCase())} placeholder="A, B+, etc." />
+              </div>
+            </div>
+            <div className="button-row">
+              <button className="btn-primary" onClick={handleSaveCourse} disabled={!selectedTermId}>
+                {editingCourse ? 'Update' : 'Add'} Course
               </button>
-              {whatIfActive && (
-                <button className="action-button secondary" onClick={resetWhatIfScenario}>
-                  Clear Scenario
+              {editingCourse && (
+                <button className="btn-secondary" onClick={() => { setEditingCourse(null); setFormCourseName(""); }}>
+                  Cancel
                 </button>
               )}
             </div>
           </div>
 
-          {whatIfActive ? (
-            <>
-              <div className="gpa-summary" style={{ marginTop: "1rem" }}>
-                <div className="gpa-stat">
-                    <span className="gpa-stat-label">Unweighted GPA</span>
-                    <span className="gpa-stat-value">{whatIfGPA.unweighted}</span>
-                </div>
-                <div className="gpa-stat">
-                    <span className="gpa-stat-label">Weighted GPA</span>
-                    <span className="gpa-stat-value">{whatIfGPA.weighted}</span>
-                </div>
+          {/* Terms and Courses List */}
+          {terms.map(term => (
+            <div key={term.id} className="section-card term-card">
+              <div className="term-header">
+                <h4>{term.season} {term.year} <span className="grade-badge">{term.termGrade}</span></h4>
+                <button className="btn-danger btn-sm" onClick={() => handleDeleteTerm(term.id!)}>Delete</button>
               </div>
-              <div className="course-type-hint">
-                <Text size="small" color="secondary">
-                  Adjust course types or grades below to see how weighted and unweighted GPAs shift.
-                </Text>
-              </div>
-
-              {whatIfTermLabels.length > 0 && (
-                <div className="what-if-term-grades">
-                  {whatIfTermLabels.map((label) => {
-                    const inputId = `whatif-term-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
-                    return (
-                      <div key={label} className="input-container">
-                        <label htmlFor={inputId}>{label} Term Grade</label>
-                        <input
-                          id={inputId}
-                          type="text"
-                          value={whatIfTermGrades[label] ?? ""}
-                          onChange={(e) => handleWhatIfTermGradeChange(label, e.target.value)}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
+              
+              {termCourses.filter(c => c.termId === term.id).length > 0 ? (
+                <table className="simple-table">
+                  <thead>
+                    <tr>
+                      <th>Course</th>
+                      <th>Type</th>
+                      <th>Credits</th>
+                      <th>Grade</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {termCourses.filter(c => c.termId === term.id).map(course => (
+                      <tr key={course.id}>
+                        <td>{course.courseName}</td>
+                        <td>{COURSE_TYPES.find(t => t.value === course.courseType)?.label ?? 'Regular'}</td>
+                        <td>{course.credits}</td>
+                        <td>{course.grade}</td>
+                        <td>
+                          <button className="btn-link" onClick={() => handleEditCourse(course)}>Edit</button>
+                          <button className="btn-link danger" onClick={() => deleteTermCourse(course.id!).then(loadData)}>Delete</button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <Text size="small" color="secondary">No courses in this term yet.</Text>
               )}
-
-              <Table caption="What-If Courses">
-                <Table.Head>
-                  <Table.Row>
-                    <Table.ColHeader id="whatif-term">Term</Table.ColHeader>
-                    <Table.ColHeader id="whatif-course">Course</Table.ColHeader>
-                    <Table.ColHeader id="whatif-credits">Credits</Table.ColHeader>
-                    <Table.ColHeader id="whatif-type">Course Type</Table.ColHeader>
-                    <Table.ColHeader id="whatif-grade">Grade</Table.ColHeader>
-                    <Table.ColHeader id="whatif-actions">Actions</Table.ColHeader>
-                  </Table.Row>
-                </Table.Head>
-                <Table.Body>
-                  {whatIfCourses.map((course) => (
-                    <Table.Row key={course.id}>
-                      <Table.Cell>
-                        <input
-                          className="table-input"
-                          type="text"
-                          value={course.termLabel}
-                          onChange={(e) => handleWhatIfCourseChange(course.id, "termLabel", e.target.value)}
-                        />
-                      </Table.Cell>
-                      <Table.Cell>
-                        <input
-                          className="table-input"
-                          type="text"
-                          value={course.courseName}
-                          onChange={(e) => handleWhatIfCourseChange(course.id, "courseName", e.target.value)}
-                        />
-                      </Table.Cell>
-                      <Table.Cell>
-                        <input
-                          className="table-input"
-                          type="number"
-                          value={course.credits}
-                          onChange={(e) => handleWhatIfCourseChange(course.id, "credits", Number(e.target.value))}
-                        />
-                      </Table.Cell>
-                      <Table.Cell>
-                        <select
-                          className="table-input"
-                          value={course.courseType}
-                          onChange={(e) => handleWhatIfCourseChange(course.id, "courseType", e.target.value)}
-                        >
-                          {COURSE_TYPES.map((type) => (
-                            <option key={type.value} value={type.value}>{type.label}</option>
-                          ))}
-                        </select>
-                      </Table.Cell>
-                      <Table.Cell>
-                        <input
-                          className="table-input"
-                          type="text"
-                          value={course.grade}
-                          onChange={(e) => handleWhatIfCourseChange(course.id, "grade", e.target.value)}
-                        />
-                      </Table.Cell>
-                      <Table.Cell>
-                        <button className="action-button danger" onClick={() => handleWhatIfCourseDelete(course.id)}>
-                          Remove
-                        </button>
-                      </Table.Cell>
-                    </Table.Row>
-                  ))}
-                </Table.Body>
-              </Table>
-            </>
-          ) : (
-            <Text>
-              Copy your current grades into a sandbox scenario to experiment with grade changes and instantly see updated weighted and unweighted GPAs.
-            </Text>
+            </div>
+          ))}
+          
+          {terms.length === 0 && (
+            <div className="empty-state">
+              <Text>Add a term above to start entering your courses.</Text>
+            </div>
           )}
         </div>
+      )}
+
+      {/* GPA Calculator Tab */}
+      {activeTab === 'calculator' && (
+        <div className="tab-content">
+          {/* Profile Selector */}
+          <div className="section-card calculator-header">
+            <div className="profile-selector">
+              <label>GPA Profile:</label>
+              <select 
+                value={selectedProfileId ?? ''} 
+                onChange={(e) => setSelectedProfileId(Number(e.target.value) || null)}
+              >
+                <option value="">Select a profile...</option>
+                {gpaProfiles.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+              <button className="btn-primary" onClick={() => openProfileEditor()}>New Profile</button>
+              {selectedProfile && (
+                <>
+                  <button className="btn-secondary" onClick={() => openProfileEditor(selectedProfile)}>Edit</button>
+                  <button className="btn-danger" onClick={() => handleDeleteProfile(selectedProfile.id!)}>Delete</button>
+                </>
+              )}
+            </div>
+
+            {selectedProfile && (
+              <div className="gpa-display">
+                <div className="gpa-main">
+                  <span className="gpa-label">Calculated GPA</span>
+                  <span className="gpa-value">{calculateGPA.gpa}</span>
+                </div>
+                <div className="gpa-details">
+                  <div><span>Credits:</span> {calculateGPA.credits}</div>
+                  <div><span>Base GPA:</span> {calculateGPA.basePoints}</div>
+                  <div><span>Bonus Points:</span> {calculateGPA.extraPoints}</div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {selectedProfile && (
+            <div className="section-card">
+              <h4>Profile Settings</h4>
+              <Text size="small" color="secondary">{selectedProfile.description || 'No description'}</Text>
+              
+              <div className="profile-summary">
+                <div className="summary-item">
+                  <strong>Grade Levels:</strong> {selectedProfile.includedGradeLevels.join(', ') || 'All'}
+                </div>
+                <div className="summary-item">
+                  <strong>Weights:</strong>
+                  <ul className="weight-list">
+                    {Object.entries(selectedProfile.weights).filter(([, v]) => v > 0).map(([k, v]) => (
+                      <li key={k}>{k.replace(/([A-Z])/g, ' $1').trim()}: +{v}</li>
+                    ))}
+                    {Object.values(selectedProfile.weights).every(v => v === 0) && <li>None (Unweighted)</li>}
+                  </ul>
+                </div>
+                {selectedProfile.caps.total !== null && (
+                  <div className="summary-item"><strong>Total Cap:</strong> {selectedProfile.caps.total} points</div>
+                )}
+              </div>
+
+              <h4 style={{ marginTop: '1.5rem' }}>Included Courses</h4>
+              {manualCoursesWithTerm.filter(c => 
+                !c.gradeLevel || selectedProfile.includedGradeLevels.includes(c.gradeLevel)
+              ).length > 0 ? (
+                <table className="simple-table">
+                  <thead>
+                    <tr>
+                      <th>Term</th>
+                      <th>Grade</th>
+                      <th>Course</th>
+                      <th>Type</th>
+                      <th>Credits</th>
+                      <th>Letter</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {manualCoursesWithTerm
+                      .filter(c => !c.gradeLevel || selectedProfile.includedGradeLevels.includes(c.gradeLevel))
+                      .map(c => (
+                        <tr key={c.id}>
+                          <td>{c.termLabel}</td>
+                          <td>{c.term?.termGrade ?? 'N/A'}</td>
+                          <td>{c.courseName}</td>
+                          <td>{COURSE_TYPES.find(t => t.value === c.courseType)?.label ?? 'Regular'}</td>
+                          <td>{c.credits}</td>
+                          <td>{c.grade}</td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="empty-state">
+                  <Text>No courses match the selected grade levels. Add courses in the Manual Entry tab.</Text>
+                </div>
+              )}
+            </div>
+          )}
+
+          {!selectedProfile && gpaProfiles.length === 0 && (
+            <div className="empty-state">
+              <Heading level="h3">Create Your First GPA Profile</Heading>
+              <Text>Click "New Profile" to set up a custom GPA calculation with your preferred weights and grade levels.</Text>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Profile Editor Modal */}
+      {showProfileEditor && (
+        <div className="modal-overlay" onClick={() => setShowProfileEditor(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h2>{editingProfile ? 'Edit' : 'Create'} GPA Profile</h2>
+            
+            {!editingProfile && (
+              <div className="input-group">
+                <label>Start from Preset</label>
+                <select onChange={(e) => e.target.value && loadPreset(e.target.value)} defaultValue="">
+                  <option value="">-- Select a preset (optional) --</option>
+                  <option value="unweighted">Unweighted GPA</option>
+                  <option value="weighted">Weighted GPA</option>
+                  <option value="10-11-weighted">10-11 Weighted GPA</option>
+                  <option value="uc-capped">UC Capped GPA</option>
+                </select>
+              </div>
+            )}
+
+            <div className="input-group">
+              <label>Profile Name *</label>
+              <input 
+                type="text" 
+                value={profileName} 
+                onChange={(e) => setProfileName(e.target.value)}
+                placeholder="e.g., UC Capped GPA"
+              />
+            </div>
+            
+            <div className="input-group">
+              <label>Description</label>
+              <input 
+                type="text" 
+                value={profileDescription} 
+                onChange={(e) => setProfileDescription(e.target.value)}
+                placeholder="e.g., UC system weighted GPA with 8-point cap"
+              />
+            </div>
+
+            <div className="input-group">
+              <label>Include Grade Levels</label>
+              <div className="checkbox-group">
+                {[9, 10, 11, 12].map(level => (
+                  <label key={level} className="checkbox-label">
+                    <input 
+                      type="checkbox" 
+                      checked={profileGradeLevels.includes(level)}
+                      onChange={() => toggleGradeLevel(level)}
+                    />
+                    {level}th
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <h3>Course Type Weights</h3>
+            <Text size="small" color="secondary">Additional points added per credit for each course type</Text>
+            <div className="weights-grid">
+              {[
+                { key: 'accelerated', label: 'Accelerated' },
+                { key: 'honors', label: 'Honors' },
+                { key: 'ap', label: 'AP' },
+                { key: 'ib', label: 'IB' },
+                { key: 'dualEnrollment', label: 'Dual Enrollment' },
+                { key: 'concurrentEnrollment', label: 'Concurrent Enrollment' },
+              ].map(({ key, label }) => (
+                <div key={key} className="input-group compact">
+                  <label>{label}</label>
+                  <input 
+                    type="number" 
+                    step="0.5" 
+                    min="0" 
+                    max="2"
+                    value={profileWeights[key as keyof typeof profileWeights]}
+                    onChange={(e) => setProfileWeights(prev => ({ 
+                      ...prev, 
+                      [key]: Number(e.target.value) || 0 
+                    }))}
+                  />
+                </div>
+              ))}
+            </div>
+
+            <h3>Bonus Point Caps</h3>
+            <Text size="small" color="secondary">Leave blank for no limit</Text>
+            <div className="caps-grid">
+              {[9, 10, 11, 12].map(level => (
+                <div key={level} className="input-group compact">
+                  <label>Grade {level} Cap</label>
+                  <input 
+                    type="number" 
+                    min="0"
+                    placeholder="Unlimited"
+                    value={profileCaps.perGradeLevel[level.toString()] ?? ''}
+                    onChange={(e) => setProfileCaps(prev => ({
+                      ...prev,
+                      perGradeLevel: {
+                        ...prev.perGradeLevel,
+                        [level.toString()]: e.target.value ? Number(e.target.value) : null
+                      }
+                    }))}
+                  />
+                </div>
+              ))}
+              <div className="input-group compact">
+                <label>Total Cap</label>
+                <input 
+                  type="number" 
+                  min="0"
+                  placeholder="Unlimited"
+                  value={profileCaps.total ?? ''}
+                  onChange={(e) => setProfileCaps(prev => ({
+                    ...prev,
+                    total: e.target.value ? Number(e.target.value) : null
+                  }))}
+                />
+              </div>
+            </div>
+
+            <div className="modal-actions">
+              <button className="btn-secondary" onClick={() => setShowProfileEditor(false)}>Cancel</button>
+              <button className="btn-primary" onClick={handleSaveProfile}>Save Profile</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

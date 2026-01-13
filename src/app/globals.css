@@ -368,3 +368,237 @@ button.nav-item {
   display: flex;
   width: 100%;
 }
+
+/* Instructure UI Component Dark Mode Overrides */
+:root.dark table,
+:root.dark [class*="fOyUs"],
+:root.dark [class*="Table"] {
+  background: var(--surface) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
+
+:root.dark thead,
+:root.dark [class*="Head"] > [class*="Row"] {
+  background: var(--surface-elevated) !important;
+}
+
+:root.dark th,
+:root.dark [class*="ColHeader"] {
+  background: var(--surface-elevated) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
+
+:root.dark td,
+:root.dark [class*="Cell"]:not([class*="ColHeader"]) {
+  background: var(--surface) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
+
+:root.dark tr:hover td,
+:root.dark [class*="Row"]:hover [class*="Cell"] {
+  background: var(--secondary) !important;
+}
+
+/* Dark mode for Instructure UI Button */
+:root.dark [class*="Button"][class*="secondary"],
+:root.dark [class*="Button"][class*="default"] {
+  background: var(--surface-elevated) !important;
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
+
+/* Dark mode for Instructure UI View */
+:root.dark [class*="View-"] {
+  color: var(--foreground);
+}
+
+/* Dark mode for Instructure UI Text */
+:root.dark [class*="Text-"] {
+  color: inherit;
+}
+
+/* Dark mode for Instructure UI Heading */
+:root.dark [class*="Heading-"] {
+  color: var(--foreground);
+}
+
+/* ==========================================
+   MOBILE RESPONSIVE BASE STYLES
+   ========================================== */
+
+/* Touch-friendly sizing */
+@media (max-width: 768px) {
+  /* Increase touch targets */
+  button, 
+  a, 
+  [role="button"],
+  input[type="checkbox"],
+  input[type="radio"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Better text sizing for mobile */
+  html {
+    font-size: 16px;
+  }
+
+  body {
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  /* Prevent horizontal scroll */
+  html, body {
+    overflow-x: hidden;
+  }
+
+  /* Modern card adjustments */
+  .modern-card {
+    padding: 1rem;
+    border-radius: var(--radius-md);
+    margin-bottom: 0.75rem;
+  }
+
+  /* Button adjustments */
+  .btn-primary,
+  .btn-secondary {
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    width: auto;
+  }
+
+  /* Instructure UI overrides for mobile */
+  [class*="Button-"] {
+    min-height: 44px !important;
+    font-size: 0.9rem !important;
+  }
+
+  [class*="TextInput-"],
+  [class*="NumberInput-"],
+  [class*="Select-"] {
+    font-size: 16px !important; /* Prevents iOS zoom */
+  }
+
+  /* Heading sizes */
+  [class*="Heading-"] h1,
+  h1 {
+    font-size: 1.5rem !important;
+  }
+
+  [class*="Heading-"] h2,
+  h2 {
+    font-size: 1.25rem !important;
+  }
+
+  [class*="Heading-"] h3,
+  h3 {
+    font-size: 1.1rem !important;
+  }
+
+  /* Flex utilities for mobile */
+  [class*="Flex-"] {
+    flex-wrap: wrap !important;
+  }
+
+  /* Table handling */
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 480px) {
+  html {
+    font-size: 15px;
+  }
+
+  .modern-card {
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.85rem;
+  }
+
+  [class*="Heading-"] h1,
+  h1 {
+    font-size: 1.35rem !important;
+  }
+
+  [class*="Heading-"] h2,
+  h2 {
+    font-size: 1.15rem !important;
+  }
+}
+
+/* Safe area support for notched devices */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+  }
+
+  @media (max-width: 768px) {
+    .ic-app-header {
+      padding-bottom: max(0px, env(safe-area-inset-bottom));
+    }
+
+    .layout-shell {
+      padding-bottom: max(60px, calc(60px + env(safe-area-inset-bottom)));
+    }
+  }
+}
+
+/* Improved scrolling for touch devices */
+@media (pointer: coarse) {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Larger touch targets for coarse pointers */
+  .course-nav__link,
+  .ic-app-header__menu-list-link,
+  .todo-item,
+  .ig-row {
+    min-height: 48px;
+  }
+
+  /* Smoother scrolling */
+  .modal-content,
+  .todo-sidebar,
+  .grades-tabs,
+  .simple-table,
+  .modern-table {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+}
+
+/* Landscape mobile adjustments */
+@media (max-width: 896px) and (orientation: landscape) {
+  .modal-overlay {
+    padding: 0.25rem;
+  }
+
+  .modal-content {
+    max-height: 95vh;
+    padding: 1rem;
+  }
+
+  .ic-app-header {
+    padding: 0;
+  }
+
+  .ic-app-header__menu-list-item {
+    min-width: 50px;
+  }
+}
