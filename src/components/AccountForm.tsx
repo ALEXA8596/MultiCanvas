@@ -13,7 +13,6 @@ export default function AccountForm({ onAccountsChange }: { onAccountsChange?: (
   const [apiKey, setApiKey] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [accounts, setAccounts] = useState<Account[]>([]);
-  const fileInputRef = React.useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
     try {
@@ -58,63 +57,6 @@ export default function AccountForm({ onAccountsChange }: { onAccountsChange?: (
     saveAccounts(next);
     setMessage("Removed");
     setTimeout(() => setMessage(null), 2000);
-  }
-
-  function handleExport() {
-    const blob = new Blob([JSON.stringify(accounts, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    const date = new Date().toISOString().replace(/[:T]/g,'-').split('.')[0];
-    a.download = `canvas-accounts-${date}.json`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  }
-
-  function handleImportClick() {
-    fileInputRef.current?.click();
-  }
-
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const parsed = JSON.parse(String(reader.result));
-        if (!Array.isArray(parsed)) {
-          setMessage('Invalid file: expected an array');
-          return;
-        }
-        const cleaned: Account[] = parsed
-          .filter((x: any) => x && typeof x === 'object')
-          .map((x: any) => ({ id: x.id || String(Date.now()+Math.random()), domain: String(x.domain||'').trim(), apiKey: String(x.apiKey||'').trim() }))
-          .filter((x: Account) => x.domain && x.apiKey);
-        if (cleaned.length === 0) {
-          setMessage('No valid accounts found');
-          return;
-        }
-        // Merge by domain+apiKey uniqueness
-        const existingKey = new Set(accounts.map(a => a.domain+'|'+a.apiKey));
-        const merged = [...accounts];
-        cleaned.forEach(acc => {
-          const key = acc.domain+'|'+acc.apiKey;
-          if (!existingKey.has(key)) {
-            merged.push(acc);
-            existingKey.add(key);
-          }
-        });
-        saveAccounts(merged);
-        setMessage(`Imported ${merged.length - accounts.length} new`);
-        setTimeout(()=>setMessage(null),2500);
-      } catch {
-        setMessage('Failed to parse file');
-      }
-    };
-    reader.readAsText(file);
-    e.target.value='';
   }
 
   return (
@@ -189,23 +131,6 @@ export default function AccountForm({ onAccountsChange }: { onAccountsChange?: (
           >
             Add account
           </button>
-          <button 
-            type="button" 
-            onClick={handleExport} 
-            className="btn-secondary"
-            style={{ fontSize: '0.875rem' }}
-          >
-            Export
-          </button>
-          <button 
-            type="button" 
-            onClick={handleImportClick} 
-            className="btn-secondary"
-            style={{ fontSize: '0.875rem' }}
-          >
-            Import
-          </button>
-          <input ref={fileInputRef} onChange={handleFileChange} type="file" accept="application/json" style={{ display: 'none' }} />
           {message && (
             <div style={{ fontSize: '0.875rem', color: 'var(--primary)', fontWeight: '500' }}>
               {message}

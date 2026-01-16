@@ -6,8 +6,6 @@ import { Heading } from "@instructure/ui-heading";
 import { Text } from "@instructure/ui-text";
 import { Flex } from "@instructure/ui-flex";
 import { Link } from "@instructure/ui-link";
-import CourseNav from "../CourseNav";
-import CourseHeader from "../CourseHeader";
 import { Account, WikiPage, fetchCoursePages } from "../../../../components/canvasApi";
 
 export default function CoursePagesPage() {
@@ -47,8 +45,6 @@ export default function CoursePagesPage() {
 	if (!accountDomain || isNaN(courseId)) return <Text>Invalid URL</Text>;
 	return (
 			<View as="div" padding="medium" width="100%">
-				<CourseHeader />
-				<CourseNav accountDomain={accountDomain} courseId={courseId} account={account} />
 	<Heading level="h3" margin="0 0 medium">Pages</Heading>
 	{loading && <Text>Loading pages...</Text>}
 	{!loading && error && <Text color="danger">{error}</Text>}

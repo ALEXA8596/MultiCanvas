@@ -69,13 +69,14 @@ export default function ModulesPage() {
       return null;
     }
     
-    if (!item.content_id && type !== 'external_url') return null;
+    if (!item.content_id && type !== 'external_url' && type !== 'quiz') return null;
     
     // Use relative navigation for assignments & files (one level up from /modules)
     if (type === 'assignment') return `./assignments/${item.content_id}`;
     if (type === 'discussion') return `./discussions/${item.content_id}`;
     if (type === 'file') return `./files/${item.content_id}`;
     if (type === 'external_url') return (item as any).external_url || null;
+    if (type === 'quiz') return item.html_url ? `https://${account?.domain}${item.html_url}` : null;
     
     return null;
   };

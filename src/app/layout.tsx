@@ -31,6 +31,7 @@ import {
 import { ThemeProvider } from "../components/ThemeProvider";
 import { ThemeToggle } from "../components/ThemeToggle";
 import { DevTools } from "../components/DevTools";
+import OfflineIndicator from "../components/OfflineIndicator";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({
@@ -271,6 +272,7 @@ export default function RootLayout({
               <div style={{ padding: "2rem" }}>{children}</div>
             </View>
           </View>
+          <OfflineIndicator />
           <DevTools />
         </ThemeProvider>
       </body>

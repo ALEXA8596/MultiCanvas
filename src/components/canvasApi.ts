@@ -605,57 +605,114 @@ function isDevModeEnabled(): boolean {
   return localStorage.getItem("devMode") === "true";
 }
 
-// Shared helper for Canvas API fetches using Authorization header
+// Import cache utilities
+import { getCachedData, setCachedData, isOnline } from '@/lib/apiCache';
+
+// Shared helper for Canvas API fetches using Authorization header with caching
 async function canvasFetch(account: Account, path: string, init?: RequestInit) {
   const url = `/api/canvas?domain=${encodeURIComponent(account.domain)}&path=${encodeURIComponent(path)}`;
   const method = init?.method || 'GET';
   const startTime = Date.now();
+  const isGetRequest = method === 'GET';
   
-  const response = await fetch(url, {
-    method,
-    body: init?.body,
-    headers: {
-      Authorization: `Bearer ${account.apiKey}`,
-      ...(init?.headers || {})
-    }
-  });
-
-  // Log the request if dev mode is enabled
-  if (isDevModeEnabled()) {
-    const duration = Date.now() - startTime;
-    
-    // Clone the response to read the body without consuming it
-    const clonedResponse = response.clone();
-    let responseBody: any = null;
-    
-    try {
-      const text = await clonedResponse.text();
-      try {
-        responseBody = JSON.parse(text);
-      } catch {
-        responseBody = text;
+  // For GET requests, check cache first
+  if (isGetRequest) {
+    // If offline, try to return cached data
+    if (!isOnline()) {
+      const cached = await getCachedData(account.domain, path);
+      if (cached) {
+        console.log(`[Cache] Serving offline cache for ${path}`);
+        // Return a mock Response-like object
+        return {
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve(cached),
+          text: () => Promise.resolve(JSON.stringify(cached)),
+          clone: () => ({ 
+            text: () => Promise.resolve(JSON.stringify(cached)),
+            json: () => Promise.resolve(cached)
+          }),
+          _fromCache: true,
+        } as unknown as Response;
       }
-    } catch {
-      responseBody = "(Could not read response)";
     }
-    
-    const logEntry: ApiLogEntry = {
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      timestamp: startTime,
-      method,
-      url,
-      path,
-      domain: account.domain,
-      status: response.status,
-      duration,
-      requestBody: init?.body ? tryParseJson(init.body) : undefined,
-      responseBody,
-    };
-    
-    addApiLog(logEntry);
   }
+  
+  try {
+    const response = await fetch(url, {
+      method,
+      body: init?.body,
+      headers: {
+        Authorization: `Bearer ${account.apiKey}`,
+        ...(init?.headers || {})
+      }
+    });
 
-  return response;
+    // Cache successful GET responses
+    if (isGetRequest && response.ok) {
+      const clonedForCache = response.clone();
+      clonedForCache.json().then(data => {
+        setCachedData(account.domain, path, data).catch(() => {});
+      }).catch(() => {});
+    }
+
+    // Log the request if dev mode is enabled
+    if (isDevModeEnabled()) {
+      const duration = Date.now() - startTime;
+      
+      // Clone the response to read the body without consuming it
+      const clonedResponse = response.clone();
+      let responseBody: any = null;
+      
+      try {
+        const text = await clonedResponse.text();
+        try {
+          responseBody = JSON.parse(text);
+        } catch {
+          responseBody = text;
+        }
+      } catch {
+        responseBody = "(Could not read response)";
+      }
+      
+      const logEntry: ApiLogEntry = {
+        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        timestamp: startTime,
+        method,
+        url,
+        path,
+        domain: account.domain,
+        status: response.status,
+        duration,
+        requestBody: init?.body ? tryParseJson(init.body) : undefined,
+        responseBody,
+      };
+      
+      addApiLog(logEntry);
+    }
+
+    return response;
+  } catch (error) {
+    // Network error - try to serve from cache
+    if (isGetRequest) {
+      const cached = await getCachedData(account.domain, path);
+      if (cached) {
+        console.log(`[Cache] Network error, serving cache for ${path}`);
+        return {
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve(cached),
+          text: () => Promise.resolve(JSON.stringify(cached)),
+          clone: () => ({ 
+            text: () => Promise.resolve(JSON.stringify(cached)),
+            json: () => Promise.resolve(cached)
+          }),
+          _fromCache: true,
+        } as unknown as Response;
+      }
+    }
+    throw error;
+  }
 }
 
 function tryParseJson(body: any): any {
